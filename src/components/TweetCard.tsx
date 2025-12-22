@@ -294,21 +294,22 @@ export function TweetCard({ tweet, index }: TweetCardProps) {
       </div>
 
       {/* Actions - Only show for pending tweets */}
+      {/* Fitts's Law: Large touch targets (min 44px), full-width on mobile */}
       {tweet.status === 'pending' && (
-        <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-[var(--border)]">
+        <div className="flex items-center gap-2 px-3 md:px-4 py-3 border-t border-[var(--border)]">
           <button
             onClick={() => rejectTweet(tweet.id, 'Rechazado manualmente')}
-            className="btn btn-reject text-xs"
+            className="flex-1 md:flex-none btn btn-reject text-sm py-2.5 min-h-[44px]"
           >
-            <X className="w-3.5 h-3.5" />
-            Rechazar
+            <X className="w-4 h-4" />
+            <span className="ml-1">Rechazar</span>
           </button>
           <button
             onClick={() => approveTweet(tweet.id)}
-            className="btn btn-approve text-xs"
+            className="flex-1 md:flex-none btn btn-approve text-sm py-2.5 min-h-[44px]"
           >
-            <Check className="w-3.5 h-3.5" />
-            Aprobar
+            <Check className="w-4 h-4" />
+            <span className="ml-1">Aprobar</span>
           </button>
         </div>
       )}

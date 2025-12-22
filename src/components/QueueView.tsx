@@ -83,131 +83,120 @@ function SortableQueueItem({ item, estimatedPublishTime, onRemove, onSchedule, o
 
         {/* Content */}
         <div className="flex-1 p-3 md:p-4">
-          <div className="flex items-start justify-between gap-2 md:gap-4">
-            <div className="flex-1 min-w-0">
-              {/* Position badge and metadata */}
-              <div className="flex items-center gap-1.5 md:gap-2 mb-2 flex-wrap">
-                <span className="w-5 h-5 md:w-6 md:h-6 rounded bg-[var(--accent-dim)] text-[var(--accent)] text-[10px] md:text-xs font-mono font-bold flex items-center justify-center flex-shrink-0">
-                  {item.position + 1}
-                </span>
-                <span className="text-[10px] md:text-xs text-[var(--text-muted)] font-mono truncate">
-                  @{item.tweet.authorUsername}
-                </span>
-                {item.scheduledAt ? (
-                  <span className="flex items-center gap-1 text-[10px] md:text-xs text-[var(--yellow)] font-mono">
-                    <Calendar className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                    <span className="hidden sm:inline">{format(item.scheduledAt, "d MMM, HH:mm", { locale: es })}</span>
-                    <span className="sm:hidden">{format(item.scheduledAt, "HH:mm", { locale: es })}</span>
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1 text-[10px] md:text-xs text-[var(--purple)] font-mono">
-                    <Timer className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                    {format(estimatedPublishTime, "HH:mm", { locale: es })}
-                  </span>
-                )}
-                {hasMedia && (
-                  <span className="flex items-center gap-1 text-[10px] md:text-xs text-[var(--cyan)]">
-                    {item.tweet.media![0].type === 'VIDEO' ? (
-                      <Film className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                    ) : item.tweet.media![0].type === 'GIF' ? (
-                      <Play className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                    ) : (
-                      <ImageIcon className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                    )}
-                    {item.tweet.media!.length}
-                  </span>
-                )}
-              </div>
+          {/* Header row with metadata */}
+          <div className="flex items-center gap-1.5 md:gap-2 mb-2 flex-wrap">
+            <span className="w-6 h-6 rounded bg-[var(--accent-dim)] text-[var(--accent)] text-xs font-mono font-bold flex items-center justify-center flex-shrink-0">
+              {item.position + 1}
+            </span>
+            <span className="text-xs text-[var(--text-muted)] font-mono">
+              @{item.tweet.authorUsername}
+            </span>
+            {item.scheduledAt ? (
+              <span className="flex items-center gap-1 text-xs text-[var(--yellow)] font-mono">
+                <Calendar className="w-3 h-3" />
+                {format(item.scheduledAt, "HH:mm", { locale: es })}
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-xs text-[var(--purple)] font-mono">
+                <Timer className="w-3 h-3" />
+                {format(estimatedPublishTime, "HH:mm", { locale: es })}
+              </span>
+            )}
+            {hasMedia && (
+              <span className="flex items-center gap-1 text-xs text-[var(--cyan)]">
+                <ImageIcon className="w-3 h-3" />
+                {item.tweet.media!.length}
+              </span>
+            )}
+            {/* Character count inline */}
+            <span className={`text-xs font-mono ml-auto ${item.customText.length > 280 ? 'text-[var(--red)]' : 'text-[var(--text-muted)]'}`}>
+              {item.customText.length}/280
+            </span>
+          </div>
 
-              {/* Tweet content */}
-              <p className="text-xs md:text-sm text-[var(--text-primary)] line-clamp-2">
-                {item.customText}
-              </p>
+          {/* Tweet content */}
+          <p className="text-sm text-[var(--text-primary)] leading-relaxed">
+            {item.customText}
+          </p>
 
-              {/* Character count */}
-              <p className={`text-[10px] md:text-xs font-mono mt-1 ${item.customText.length > 280 ? 'text-[var(--red)]' : 'text-[var(--text-muted)]'}`}>
-                {item.customText.length}/280
-              </p>
-
-              {/* Media Preview - Always visible */}
-              {hasMedia && (
-                <div className="flex gap-2 mt-3">
-                  {item.tweet.media!.slice(0, 4).map((media, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setExpandedMedia({ url: media.url, type: media.type })}
-                      className="relative w-16 h-16 rounded-lg overflow-hidden bg-[var(--bg-secondary)] group cursor-pointer hover:ring-2 hover:ring-[var(--accent)] transition-all"
-                    >
-                      <img
-                        src={media.thumbnailUrl || media.url}
-                        alt=""
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
-                      />
-                      {(media.type === 'VIDEO' || media.type === 'GIF') && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                          <Play className="w-5 h-5 text-white" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                  {item.tweet.media!.length > 4 && (
-                    <div className="w-16 h-16 rounded-lg bg-[var(--bg-secondary)] flex items-center justify-center text-xs text-[var(--text-muted)]">
-                      +{item.tweet.media!.length - 4}
+          {/* Media Preview */}
+          {hasMedia && (
+            <div className="flex gap-2 mt-3">
+              {item.tweet.media!.slice(0, 3).map((media, i) => (
+                <button
+                  key={i}
+                  onClick={() => setExpandedMedia({ url: media.url, type: media.type })}
+                  className="relative w-14 h-14 md:w-16 md:h-16 rounded-lg overflow-hidden bg-[var(--bg-secondary)] group cursor-pointer hover:ring-2 hover:ring-[var(--accent)] transition-all flex-shrink-0"
+                >
+                  <img
+                    src={media.thumbnailUrl || media.url}
+                    alt=""
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
+                  />
+                  {(media.type === 'VIDEO' || media.type === 'GIF') && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                      <Play className="w-4 h-4 text-white" />
                     </div>
                   )}
-                </div>
-              )}
-
-              {/* URLs Preview - Always visible */}
-              {urls.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  {urls.slice(0, 2).map((url, i) => (
-                    <a
-                      key={i}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-xs text-[var(--cyan)] hover:underline truncate"
-                    >
-                      <ExternalLink className="w-3 h-3 flex-shrink-0" />
-                      <span className="truncate">{url}</span>
-                    </a>
-                  ))}
+                </button>
+              ))}
+              {item.tweet.media!.length > 3 && (
+                <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg bg-[var(--bg-secondary)] flex items-center justify-center text-xs text-[var(--text-muted)] flex-shrink-0">
+                  +{item.tweet.media!.length - 3}
                 </div>
               )}
             </div>
+          )}
 
-            {/* Actions */}
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setShowScheduler(!showScheduler)}
-                disabled={isPublishing}
-                className="p-2 rounded hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--yellow)] transition-colors disabled:opacity-50"
-                title="Programar"
+          {/* URLs Preview */}
+          {urls.length > 0 && (
+            <div className="mt-2">
+              <a
+                href={urls[0]}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-[var(--cyan)] hover:underline"
               >
-                <Clock className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => onPublishNow(item.id)}
-                disabled={isPublishing || item.customText.length > 280}
-                className="p-2 rounded hover:bg-[var(--accent-dim)] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors disabled:opacity-50"
-                title="Publicar ahora"
-              >
-                {isThisPublishing ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
+                <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate max-w-[200px]">{urls[0]}</span>
+              </a>
+            </div>
+          )}
+
+          {/* Actions - Bottom on mobile for thumb reachability (Fitts's Law) */}
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--border)]">
+            <button
+              onClick={() => onPublishNow(item.id)}
+              disabled={isPublishing || item.customText.length > 280}
+              className="flex-1 md:flex-none btn btn-primary text-xs py-2 px-3 min-h-[44px]"
+              title="Publicar ahora"
+            >
+              {isThisPublishing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
                   <Send className="w-4 h-4" />
-                )}
-              </button>
-              <button
-                onClick={() => onRemove(item.id)}
-                disabled={isPublishing}
-                className="p-2 rounded hover:bg-[var(--red-dim)] text-[var(--text-muted)] hover:text-[var(--red)] transition-colors disabled:opacity-50"
-                title="Eliminar"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+                  <span className="ml-1">Publicar</span>
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => setShowScheduler(!showScheduler)}
+              disabled={isPublishing}
+              className="btn btn-ghost text-xs py-2 px-3 min-h-[44px]"
+              title="Programar"
+            >
+              <Clock className="w-4 h-4" />
+              <span className="hidden sm:inline ml-1">Programar</span>
+            </button>
+            <button
+              onClick={() => onRemove(item.id)}
+              disabled={isPublishing}
+              className="btn btn-ghost text-[var(--red)] hover:bg-[var(--red-dim)] text-xs py-2 px-3 min-h-[44px] ml-auto"
+              title="Eliminar"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Scheduler */}
@@ -219,10 +208,10 @@ function SortableQueueItem({ item, estimatedPublishTime, onRemove, onSchedule, o
                 exit={{ height: 0, opacity: 0 }}
                 className="mt-3 pt-3 border-t border-[var(--border)]"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <input
                     type="datetime-local"
-                    className="input input-mono text-sm"
+                    className="input input-mono text-sm flex-1"
                     defaultValue={item.scheduledAt ? format(item.scheduledAt, "yyyy-MM-dd'T'HH:mm") : ''}
                     onChange={(e) => {
                       if (e.target.value) {
