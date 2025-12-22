@@ -82,36 +82,37 @@ function SortableQueueItem({ item, estimatedPublishTime, onRemove, onSchedule, o
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-4">
-          <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 p-3 md:p-4">
+          <div className="flex items-start justify-between gap-2 md:gap-4">
             <div className="flex-1 min-w-0">
               {/* Position badge and metadata */}
-              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <span className="w-6 h-6 rounded bg-[var(--accent-dim)] text-[var(--accent)] text-xs font-mono font-bold flex items-center justify-center">
+              <div className="flex items-center gap-1.5 md:gap-2 mb-2 flex-wrap">
+                <span className="w-5 h-5 md:w-6 md:h-6 rounded bg-[var(--accent-dim)] text-[var(--accent)] text-[10px] md:text-xs font-mono font-bold flex items-center justify-center flex-shrink-0">
                   {item.position + 1}
                 </span>
-                <span className="text-xs text-[var(--text-muted)] font-mono">
+                <span className="text-[10px] md:text-xs text-[var(--text-muted)] font-mono truncate">
                   @{item.tweet.authorUsername}
                 </span>
                 {item.scheduledAt ? (
-                  <span className="flex items-center gap-1 text-xs text-[var(--yellow)] font-mono">
-                    <Calendar className="w-3 h-3" />
-                    {format(item.scheduledAt, "d MMM, HH:mm", { locale: es })}
+                  <span className="flex items-center gap-1 text-[10px] md:text-xs text-[var(--yellow)] font-mono">
+                    <Calendar className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                    <span className="hidden sm:inline">{format(item.scheduledAt, "d MMM, HH:mm", { locale: es })}</span>
+                    <span className="sm:hidden">{format(item.scheduledAt, "HH:mm", { locale: es })}</span>
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1 text-xs text-[var(--purple)] font-mono">
-                    <Timer className="w-3 h-3" />
+                  <span className="flex items-center gap-1 text-[10px] md:text-xs text-[var(--purple)] font-mono">
+                    <Timer className="w-2.5 h-2.5 md:w-3 md:h-3" />
                     {format(estimatedPublishTime, "HH:mm", { locale: es })}
                   </span>
                 )}
                 {hasMedia && (
-                  <span className="flex items-center gap-1 text-xs text-[var(--cyan)]">
+                  <span className="flex items-center gap-1 text-[10px] md:text-xs text-[var(--cyan)]">
                     {item.tweet.media![0].type === 'VIDEO' ? (
-                      <Film className="w-3 h-3" />
+                      <Film className="w-2.5 h-2.5 md:w-3 md:h-3" />
                     ) : item.tweet.media![0].type === 'GIF' ? (
-                      <Play className="w-3 h-3" />
+                      <Play className="w-2.5 h-2.5 md:w-3 md:h-3" />
                     ) : (
-                      <ImageIcon className="w-3 h-3" />
+                      <ImageIcon className="w-2.5 h-2.5 md:w-3 md:h-3" />
                     )}
                     {item.tweet.media!.length}
                   </span>
@@ -119,12 +120,12 @@ function SortableQueueItem({ item, estimatedPublishTime, onRemove, onSchedule, o
               </div>
 
               {/* Tweet content */}
-              <p className="text-sm text-[var(--text-primary)] line-clamp-2">
+              <p className="text-xs md:text-sm text-[var(--text-primary)] line-clamp-2">
                 {item.customText}
               </p>
 
               {/* Character count */}
-              <p className={`text-xs font-mono mt-1 ${item.customText.length > 280 ? 'text-[var(--red)]' : 'text-[var(--text-muted)]'}`}>
+              <p className={`text-[10px] md:text-xs font-mono mt-1 ${item.customText.length > 280 ? 'text-[var(--red)]' : 'text-[var(--text-muted)]'}`}>
                 {item.customText.length}/280
               </p>
 
@@ -487,55 +488,54 @@ export function QueueView() {
   return (
     <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[var(--bg-primary)]">
       {/* Header */}
-      <header className="px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-primary)]">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold flex items-center gap-2">
-              <ListOrdered className="w-5 h-5 text-[var(--accent)]" />
-              Cola de Publicación
+      <header className="pl-14 md:pl-6 pr-4 md:pr-6 py-4 border-b border-[var(--border)] bg-[var(--bg-primary)]">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-base md:text-xl font-semibold flex items-center gap-2">
+              <ListOrdered className="w-4 h-4 md:w-5 md:h-5 text-[var(--accent)] flex-shrink-0" />
+              <span>Cola</span>
               {queue.length > 0 && (
-                <span className="px-2 py-0.5 text-xs font-mono bg-[var(--accent-dim)] text-[var(--accent)] rounded">
-                  {queue.length} en cola
+                <span className="px-1.5 py-0.5 text-[10px] md:text-xs font-mono bg-[var(--accent-dim)] text-[var(--accent)] rounded">
+                  {queue.length}
                 </span>
               )}
             </h1>
-            <p className="text-sm text-[var(--text-muted)] mt-1">
-              Arrastra para reordenar. Intervalo: {config.publishIntervalMinutes || 30} min entre tweets.
+            <p className="text-[11px] md:text-sm text-[var(--text-muted)] mt-1">
+              Intervalo: {config.publishIntervalMinutes || 30} min
             </p>
           </div>
 
           {/* Auto-publish controls */}
           {queue.length > 0 && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 flex-shrink-0">
               {isAutoPublishing ? (
                 <>
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--green-dim)] text-[var(--green)]">
-                    <div className="w-2 h-2 rounded-full bg-[var(--green)] animate-pulse" />
-                    <span className="text-sm font-mono">
-                      Próximo en {formatCountdown(autoPublishCountdown)}
+                  <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[var(--green-dim)] text-[var(--green)]">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse" />
+                    <span className="text-xs font-mono">
+                      {formatCountdown(autoPublishCountdown)}
                     </span>
                   </div>
                   <button
                     onClick={stopAutoPublish}
                     disabled={isPublishing}
-                    className="btn btn-ghost flex items-center gap-2 text-[var(--red)] hover:bg-[var(--red-dim)]"
+                    className="btn btn-ghost text-[var(--red)] hover:bg-[var(--red-dim)] text-xs px-2 py-1.5"
                   >
-                    <StopCircle className="w-4 h-4" />
-                    Detener
+                    <StopCircle className="w-3.5 h-3.5" />
                   </button>
                 </>
               ) : (
                 <button
                   onClick={startAutoPublish}
                   disabled={isPublishing}
-                  className="btn btn-primary flex items-center gap-2"
+                  className="btn btn-primary text-xs px-3 py-1.5"
                 >
                   {isPublishing ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
-                    <PlayCircle className="w-4 h-4" />
+                    <PlayCircle className="w-3.5 h-3.5" />
                   )}
-                  {isPublishing ? 'Publicando...' : 'Auto-publicar'}
+                  <span className="hidden sm:inline ml-1">Auto</span>
                 </button>
               )}
             </div>
@@ -544,25 +544,29 @@ export function QueueView() {
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6">
         {queue.length === 0 ? (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             className="empty-state"
           >
-            <div className="w-20 h-20 rounded-2xl bg-[var(--bg-tertiary)] flex items-center justify-center mb-4">
-              <ListOrdered className="empty-state-icon" />
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-[var(--bg-tertiary)] flex items-center justify-center mb-4">
+              <ListOrdered className="w-8 h-8 md:w-10 md:h-10 text-[var(--text-muted)]" />
             </div>
-            <h3 className="text-lg font-medium text-[var(--text-secondary)] mb-2">
+            <h3 className="text-base md:text-lg font-medium text-[var(--text-secondary)] mb-2">
               La cola está vacía
             </h3>
-            <p className="text-sm text-[var(--text-muted)] max-w-md">
-              Aprueba tweets desde el Inbox para añadirlos a la cola de publicación.
+            <p className="text-xs md:text-sm text-[var(--text-muted)] max-w-md">
+              Aprueba tweets desde el Inbox para añadirlos a la cola.
             </p>
           </motion.div>
         ) : (
-          <div className="max-w-3xl mx-auto space-y-3">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="max-w-3xl mx-auto space-y-3"
+          >
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -607,7 +611,7 @@ export function QueueView() {
                 ) : null}
               </DragOverlay>
             </DndContext>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

@@ -144,23 +144,19 @@ export function ConfigView() {
   return (
     <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[var(--bg-primary)]">
       {/* Header */}
-      <header className="px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-primary)]">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold flex items-center gap-2">
-              <Settings className="w-5 h-5 text-[var(--accent)]" />
-              Configuración
-            </h1>
-            <p className="text-sm text-[var(--text-muted)] mt-1">
-              Ajusta el comportamiento del sistema de scraping y publicación
-            </p>
-          </div>
-        </div>
+      <header className="pl-14 md:pl-6 pr-4 md:pr-6 py-4 border-b border-[var(--border)] bg-[var(--bg-primary)]">
+        <h1 className="text-base md:text-xl font-semibold flex items-center gap-2">
+          <Settings className="w-4 h-4 md:w-5 md:h-5 text-[var(--accent)] flex-shrink-0" />
+          <span>Configuración</span>
+        </h1>
+        <p className="text-[11px] md:text-sm text-[var(--text-muted)] mt-1">
+          Ajustes del sistema
+        </p>
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-2xl mx-auto space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="max-w-2xl mx-auto space-y-4 md:space-y-6">
           {/* System Status Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}

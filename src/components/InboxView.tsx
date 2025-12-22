@@ -285,45 +285,62 @@ export function InboxView() {
   return (
     <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[var(--bg-primary)]">
       {/* Header */}
-      <header className="px-6 py-5 border-b border-[var(--border)]">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-lg font-medium text-[var(--text-primary)]">Bandeja de entrada</h1>
-            <p className="text-sm text-[var(--text-secondary)] mt-0.5">
-              {allCount} tweets · {pendingCount} pendientes · {reviewCount} relevantes
-              {isScrapingActive && countdown && (
-                <span className="ml-2 text-[var(--text-muted)]">· Próximo en {countdown}</span>
+      <header className="pl-14 md:pl-6 pr-4 md:pr-6 py-4 md:py-5 border-b border-[var(--border)]">
+        <div className="flex flex-col gap-3 mb-4">
+          {/* Title row */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-base md:text-lg font-medium text-[var(--text-primary)]">Bandeja de entrada</h1>
+              <p className="text-[11px] md:text-sm text-[var(--text-secondary)] mt-0.5">
+                {pendingCount} pendientes · {reviewCount} relevantes
+                {isScrapingActive && countdown && (
+                  <span className="text-[var(--text-muted)]"> · {countdown}</span>
+                )}
+              </p>
+            </div>
+            {/* Primary action - always visible */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {isScrapingLoading ? (
+                <button onClick={handleCancelScrape} className="btn btn-ghost text-xs px-2 py-1.5">
+                  <Square className="w-3.5 h-3.5" />
+                </button>
+              ) : (
+                <button onClick={handleScrape} className="btn btn-primary text-xs px-3 py-1.5">
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline ml-1">Scrapear</span>
+                </button>
               )}
-            </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          {/* Secondary actions row - mobile */}
+          <div className="flex items-center gap-2 md:hidden">
             {pendingInView > 0 && (
               <button
                 onClick={handleApproveAll}
                 disabled={isApprovingAll || isScrapingLoading}
-                className="btn btn-ghost text-[var(--green)]"
+                className="btn btn-ghost text-[var(--green)] text-xs px-2 py-1.5 flex-1"
               >
-                {isApprovingAll ? (
-                  <Loader2 className="w-4 h-4 spinner" />
-                ) : null}
+                {isApprovingAll && <Loader2 className="w-3.5 h-3.5 spinner mr-1" />}
                 Aprobar todos ({pendingInView})
               </button>
             )}
-            {isScrapingLoading ? (
-              <>
-                <button disabled className="btn btn-secondary">
-                  <Loader2 className="w-4 h-4 spinner" />
-                  Scrapeando...
-                </button>
-                <button onClick={handleCancelScrape} className="btn btn-ghost">
-                  <Square className="w-3 h-3" />
-                  Detener
-                </button>
-              </>
-            ) : (
-              <button onClick={handleScrape} className="btn btn-primary">
-                <RefreshCw className="w-4 h-4" />
-                Scrapear
+            {isScrapingLoading && (
+              <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+                <Loader2 className="w-3.5 h-3.5 spinner" />
+                <span>Scrapeando...</span>
+              </div>
+            )}
+          </div>
+          {/* Desktop secondary actions */}
+          <div className="hidden md:flex items-center gap-2">
+            {pendingInView > 0 && (
+              <button
+                onClick={handleApproveAll}
+                disabled={isApprovingAll || isScrapingLoading}
+                className="btn btn-ghost text-[var(--green)] text-sm px-3"
+              >
+                {isApprovingAll && <Loader2 className="w-4 h-4 spinner mr-1" />}
+                Aprobar todos ({pendingInView})
               </button>
             )}
           </div>
@@ -495,58 +512,66 @@ export function InboxView() {
 
         {/* Filter - Tabs */}
         {!scrapeProgress && (
-          <div className="tabs">
+          <div className="tabs overflow-x-auto no-scrollbar">
             <button
               onClick={() => setActiveFilter('review')}
-              className={`tab ${activeFilter === 'review' ? 'active' : ''}`}
+              className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'review' ? 'active' : ''}`}
               title="Tweets pendientes con score 7 o más"
             >
-              Relevantes ({reviewCount})
+              <span className="hidden sm:inline">Relevantes</span>
+              <span className="sm:hidden">Top</span> ({reviewCount})
             </button>
             <button
               onClick={() => setActiveFilter('pending')}
-              className={`tab ${activeFilter === 'pending' ? 'active' : ''}`}
+              className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'pending' ? 'active' : ''}`}
               title="Todos los tweets pendientes"
             >
-              Pendientes ({pendingCount})
+              <span className="hidden sm:inline">Pendientes</span>
+              <span className="sm:hidden">Pend</span> ({pendingCount})
             </button>
             <button
               onClick={() => setActiveFilter('approved')}
-              className={`tab ${activeFilter === 'approved' ? 'active' : ''}`}
+              className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'approved' ? 'active' : ''}`}
             >
-              Aprobados ({approvedCount})
+              <span className="hidden sm:inline">Aprobados</span>
+              <span className="sm:hidden">OK</span> ({approvedCount})
             </button>
             <button
               onClick={() => setActiveFilter('rejected')}
-              className={`tab ${activeFilter === 'rejected' ? 'active' : ''}`}
+              className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'rejected' ? 'active' : ''}`}
             >
-              Rechazados ({rejectedCount})
+              <span className="hidden sm:inline">Rechazados</span>
+              <span className="sm:hidden">No</span> ({rejectedCount})
             </button>
           </div>
         )}
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6">
         <AnimatePresence mode="popLayout">
           {filteredTweets.length === 0 ? (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               className="empty-state"
             >
-              <p className="text-[var(--text-muted)] mb-4">No hay tweets que coincidan con este filtro</p>
+              <p className="text-[var(--text-muted)] mb-4 text-sm md:text-base">No hay tweets que coincidan con este filtro</p>
               <button onClick={handleScrape} disabled={isScrapingLoading} className="btn btn-secondary">
                 {isScrapingLoading ? <Loader2 className="w-4 h-4 spinner" /> : <RefreshCw className="w-4 h-4" />}
                 Scrapear ahora
               </button>
             </motion.div>
           ) : (
-            <div className="space-y-3 max-w-3xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-3 max-w-3xl mx-auto"
+            >
               {filteredTweets.map((tweet, index) => (
                 <TweetCard key={tweet.id} tweet={tweet} index={index} />
               ))}
-            </div>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
