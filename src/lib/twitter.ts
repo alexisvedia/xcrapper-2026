@@ -100,7 +100,22 @@ export async function fetchHomeTimeline(count: number = 50): Promise<RawTweet[]>
         await sleep(delay);
       }
 
-      const timeline = await client.user.recommended(cursor);
+      let timeline;
+      try {
+        console.log('[Twitter] Calling client.user.recommended...');
+        timeline = await client.user.recommended(cursor);
+        console.log('[Twitter] Got response, list length:', timeline?.list?.length || 0);
+      } catch (apiError) {
+        // Capture the raw error from rettiwt-api
+        const rawError = apiError as { message?: string; response?: { status?: number; data?: unknown } };
+        console.error('[Twitter] API call failed:', {
+          message: rawError.message,
+          status: rawError.response?.status,
+          data: rawError.response?.data,
+          raw: JSON.stringify(apiError, Object.getOwnPropertyNames(apiError))
+        });
+        throw new Error(`Twitter API call failed: ${rawError.message || JSON.stringify(apiError)}`);
+      }
       batchCount++;
 
       if (!timeline.list || timeline.list.length === 0) break;
