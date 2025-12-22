@@ -3,16 +3,36 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 import { AIModel, AI_MODELS, AIProvider } from '@/types';
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+// Lazy initialization to avoid errors when environment variables are not available at module load
+let _groq: Groq | null = null;
+let _gemini: GoogleGenerativeAI | null = null;
+let _openrouter: OpenAI | null = null;
 
-const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+function getGroq(): Groq {
+  if (!_groq) {
+    _groq = new Groq({
+      apiKey: process.env.GROQ_API_KEY,
+    });
+  }
+  return _groq;
+}
 
-const openrouter = new OpenAI({
-  baseURL: 'https://openrouter.ai/api/v1',
-  apiKey: process.env.OPENROUTER_API_KEY,
-});
+function getGemini(): GoogleGenerativeAI {
+  if (!_gemini) {
+    _gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+  }
+  return _gemini;
+}
+
+function getOpenRouter(): OpenAI {
+  if (!_openrouter) {
+    _openrouter = new OpenAI({
+      baseURL: 'https://openrouter.ai/api/v1',
+      apiKey: process.env.OPENROUTER_API_KEY,
+    });
+  }
+  return _openrouter;
+}
 
 // Rate limit tracking per provider
 const rateLimitState: Record<string, { blockedUntil: Date | null; retryAfterSeconds: number }> = {
@@ -112,7 +132,7 @@ async function callAIModel(
   const provider = getProvider(model);
 
   if (provider === 'gemini') {
-    const geminiModel = gemini.getGenerativeModel({
+    const geminiModel = getGemini().getGenerativeModel({
       model,
       generationConfig: {
         temperature: 0.2,
@@ -127,7 +147,7 @@ async function callAIModel(
 
     return result.response.text() || '{}';
   } else if (provider === 'openrouter') {
-    const completion = await openrouter.chat.completions.create({
+    const completion = await getOpenRouter().chat.completions.create({
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -140,7 +160,7 @@ async function callAIModel(
     return completion.choices[0]?.message?.content || '{}';
   } else {
     // Groq API
-    const completion = await groq.chat.completions.create({
+    const completion = await getGroq().chat.completions.create({
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -334,7 +354,7 @@ export async function reprocessTweet(
   targetLanguage: string
 ): Promise<string> {
   try {
-    const completion = await groq.chat.completions.create({
+    const completion = await getGroq().chat.completions.create({
       messages: [
         {
           role: 'system',
