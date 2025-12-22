@@ -131,8 +131,11 @@ export async function fetchHomeTimeline(count: number = 50): Promise<RawTweet[]>
 
     return allTweets.slice(0, count);
   } catch (error) {
-    console.error('Error fetching timeline:', error);
-    throw error;
+    const errorMessage = error instanceof Error
+      ? `${error.name}: ${error.message}`
+      : String(error);
+    console.error('Error fetching timeline:', errorMessage, error);
+    throw new Error(`Twitter API error: ${errorMessage}`);
   }
 }
 
