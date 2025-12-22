@@ -89,7 +89,8 @@ export async function fetchHomeTimeline(count: number = 50): Promise<RawTweet[]>
 
       if (!timeline.list || timeline.list.length === 0) break;
 
-      const mapped = timeline.list.map((tweet) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mapped = timeline.list.map((tweet: any) => {
         // Extract quoted tweet if present
         const quotedTweet = tweet.quoted ? {
           id: tweet.quoted.id,
@@ -112,7 +113,8 @@ export async function fetchHomeTimeline(count: number = 50): Promise<RawTweet[]>
             profileImageUrl: tweet.tweetBy?.profileImage,
           },
           url: `https://twitter.com/${tweet.tweetBy?.userName}/status/${tweet.id}`,
-          media: tweet.media?.map((m) => ({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          media: tweet.media?.map((m: any) => ({
             type: m.type as 'PHOTO' | 'VIDEO' | 'GIF',
             url: m.url,
             thumbnailUrl: m.thumbnailUrl,
