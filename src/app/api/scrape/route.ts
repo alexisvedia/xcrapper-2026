@@ -2,7 +2,7 @@ import { fetchHomeTimeline, sleep } from '@/lib/twitter';
 import { analyzeTweet, checkSimilarity } from '@/lib/ai';
 import { supabase } from '@/lib/supabase';
 import { fetchConfig, cleanupOldTweets, getRecentPublishedContent, getPendingAndApprovedContent } from '@/lib/db';
-import { getAbortFlag, setAbortFlag } from './abort/route';
+import { getAbortFlag, setAbortFlag } from '@/lib/abort-state';
 
 // Random delay helper (returns ms)
 function randomDelay(minMs: number, maxMs: number): number {
