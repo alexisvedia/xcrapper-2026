@@ -4,8 +4,8 @@ let RettiwtClass: any = null;
 
 async function loadRettiwt() {
   if (!RettiwtClass) {
-    const module = await import('rettiwt-api');
-    RettiwtClass = module.Rettiwt;
+    const rettiwtModule = await import('rettiwt-api');
+    RettiwtClass = rettiwtModule.Rettiwt;
   }
   return RettiwtClass;
 }
