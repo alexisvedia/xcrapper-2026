@@ -164,11 +164,12 @@ function SortableQueueItem({ item, estimatedPublishTime, onRemove, onSchedule, o
           )}
 
           {/* Actions - Bottom on mobile for thumb reachability (Fitts's Law) */}
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--border)]">
+          {/* Mobile: 3 equal buttons | Desktop: Publicar prominent + icon buttons */}
+          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-[var(--border)] md:flex md:items-center">
             <button
               onClick={() => onPublishNow(item.id)}
               disabled={isPublishing || item.customText.length > 280}
-              className="flex-1 md:flex-none btn btn-primary text-xs py-2 px-3 min-h-[44px]"
+              className="btn btn-primary text-xs py-2.5 min-h-[44px] col-span-1 md:flex-none"
               title="Publicar ahora"
             >
               {isThisPublishing ? (
@@ -176,26 +177,27 @@ function SortableQueueItem({ item, estimatedPublishTime, onRemove, onSchedule, o
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  <span className="ml-1">Publicar</span>
+                  <span className="ml-1 hidden sm:inline">Publicar</span>
                 </>
               )}
             </button>
             <button
               onClick={() => setShowScheduler(!showScheduler)}
               disabled={isPublishing}
-              className="btn btn-ghost text-xs py-2 px-3 min-h-[44px]"
+              className="btn btn-secondary text-xs py-2.5 min-h-[44px] col-span-1"
               title="Programar"
             >
               <Clock className="w-4 h-4" />
-              <span className="hidden sm:inline ml-1">Programar</span>
+              <span className="ml-1 hidden sm:inline">Hora</span>
             </button>
             <button
               onClick={() => onRemove(item.id)}
               disabled={isPublishing}
-              className="btn btn-ghost text-[var(--red)] hover:bg-[var(--red-dim)] text-xs py-2 px-3 min-h-[44px] ml-auto"
+              className="btn bg-[var(--red-dim)] text-[var(--red)] hover:bg-[var(--red)] hover:text-white text-xs py-2.5 min-h-[44px] col-span-1 md:ml-auto"
               title="Eliminar"
             >
               <Trash2 className="w-4 h-4" />
+              <span className="ml-1 hidden sm:inline">Borrar</span>
             </button>
           </div>
 
