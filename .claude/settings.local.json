@@ -25,7 +25,8 @@
       "Bash(curl:*)",
       "Bash(npx vercel:*)",
       "Bash(timeout 15 npx vercel:*)",
-      "Bash(timeout 20 npx vercel logs:*)"
+      "Bash(timeout 20 npx vercel logs:*)",
+      "Bash(npm ls:*)"
     ]
   }
 }
