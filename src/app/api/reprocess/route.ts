@@ -3,6 +3,10 @@ import { reprocessTweet } from '@/lib/ai';
 import { supabase } from '@/lib/supabase';
 import { fetchConfig } from '@/lib/db';
 
+// Vercel serverless config
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

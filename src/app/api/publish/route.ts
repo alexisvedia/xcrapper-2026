@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { postTweet } from '@/lib/twitter';
 import { supabase } from '@/lib/supabase';
 
+// Vercel serverless config
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 interface MediaItem {
   type: 'PHOTO' | 'VIDEO' | 'GIF';
   url: string;

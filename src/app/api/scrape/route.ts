@@ -4,6 +4,11 @@ import { supabase } from '@/lib/supabase';
 import { fetchConfig, cleanupOldTweets, getRecentPublishedContent, getPendingAndApprovedContent } from '@/lib/db';
 import { getAbortFlag, setAbortFlag } from '@/lib/abort-state';
 
+// Vercel serverless config
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 300; // 5 minutes max (Vercel Pro limit)
+
 // Random delay helper (returns ms)
 function randomDelay(minMs: number, maxMs: number): number {
   return Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
