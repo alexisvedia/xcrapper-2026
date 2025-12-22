@@ -24,6 +24,7 @@ function dbToAppTweet(db: DbScrapedTweet): ScrapedTweet {
 }
 
 // Transform app tweet to DB tweet
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function appToDbTweet(tweet: ScrapedTweet): Partial<DbScrapedTweet> {
   return {
     id: tweet.id,

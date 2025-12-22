@@ -47,7 +47,10 @@ export function Sidebar() {
 
   // Close mobile menu on view change
   useEffect(() => {
-    setMobileOpen(false);
+    if (mobileOpen) {
+      setMobileOpen(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentView]);
 
   const getCounts = (id: ViewType) => {

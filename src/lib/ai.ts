@@ -59,6 +59,7 @@ function parseRetryAfter(errorMessage: string): number {
   return 600;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getAvailableFallbackModel(primaryModel: AIModel): AIModel | null {
   const primaryProvider = getProvider(primaryModel);
 
