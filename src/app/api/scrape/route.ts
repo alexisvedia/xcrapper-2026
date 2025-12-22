@@ -7,7 +7,7 @@ import { getAbortFlag, setAbortFlag } from '@/lib/abort-state';
 // Vercel serverless config
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300; // 5 minutes max (Vercel Pro limit)
+export const maxDuration = 60; // Vercel Hobby plan limit
 
 // Random delay helper (returns ms)
 function randomDelay(minMs: number, maxMs: number): number {
