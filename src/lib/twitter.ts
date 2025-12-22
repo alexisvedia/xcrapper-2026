@@ -4,8 +4,15 @@ let RettiwtClass: any = null;
 
 async function loadRettiwt() {
   if (!RettiwtClass) {
-    const rettiwtModule = await import('rettiwt-api');
-    RettiwtClass = rettiwtModule.Rettiwt;
+    try {
+      console.log('[Twitter] Loading rettiwt-api module...');
+      const rettiwtModule = await import('rettiwt-api');
+      RettiwtClass = rettiwtModule.Rettiwt;
+      console.log('[Twitter] Module loaded successfully');
+    } catch (err) {
+      console.error('[Twitter] Failed to load rettiwt-api:', err);
+      throw new Error(`Failed to load Twitter library: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
   return RettiwtClass;
 }
@@ -28,11 +35,20 @@ export async function getTwitterClient() {
     throw new Error('TWITTER_API_KEY not configured. Use X Auth Helper extension to generate it.');
   }
 
+  console.log('[Twitter] Initializing client with API key...');
   const Rettiwt = await loadRettiwt();
-  return new Rettiwt({
-    apiKey,
-    logging: process.env.NODE_ENV === 'development',
-  });
+
+  try {
+    const client = new Rettiwt({
+      apiKey,
+      logging: process.env.NODE_ENV === 'development',
+    });
+    console.log('[Twitter] Client initialized successfully');
+    return client;
+  } catch (err) {
+    console.error('[Twitter] Failed to initialize client:', err);
+    throw new Error(`Failed to initialize Twitter client: ${err instanceof Error ? err.message : String(err)}`);
+  }
 }
 
 export interface TweetMedia {
@@ -131,10 +147,18 @@ export async function fetchHomeTimeline(count: number = 50): Promise<RawTweet[]>
 
     return allTweets.slice(0, count);
   } catch (error) {
-    const errorMessage = error instanceof Error
-      ? `${error.name}: ${error.message}`
-      : String(error);
-    console.error('Error fetching timeline:', errorMessage, error);
+    let errorMessage: string;
+    if (error instanceof Error) {
+      errorMessage = `${error.name}: ${error.message}`;
+      if (error.stack) {
+        console.error('Error stack:', error.stack);
+      }
+    } else if (typeof error === 'object' && error !== null) {
+      errorMessage = JSON.stringify(error);
+    } else {
+      errorMessage = String(error);
+    }
+    console.error('Error fetching timeline:', errorMessage);
     throw new Error(`Twitter API error: ${errorMessage}`);
   }
 }
