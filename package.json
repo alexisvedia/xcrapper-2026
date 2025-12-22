@@ -9,9 +9,21 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "next": "16.1.0",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@google/generative-ai": "^0.24.1",
+    "@supabase/supabase-js": "^2.89.0",
+    "date-fns": "^4.1.0",
+    "groq-sdk": "^0.37.0",
+    "lucide-react": "^0.562.0",
+    "motion": "^12.23.26",
+    "next": "^15.5.9",
+    "openai": "^6.15.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "rettiwt-api": "^6.1.4",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
