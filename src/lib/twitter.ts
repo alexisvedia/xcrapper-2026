@@ -1,4 +1,14 @@
-import { Rettiwt } from 'rettiwt-api';
+// Dynamic import to avoid ESM/CommonJS issues in Vercel serverless
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let RettiwtClass: any = null;
+
+async function loadRettiwt() {
+  if (!RettiwtClass) {
+    const module = await import('rettiwt-api');
+    RettiwtClass = module.Rettiwt;
+  }
+  return RettiwtClass;
+}
 
 // Random delay helper (returns ms)
 function randomDelay(minMs: number, maxMs: number): number {
@@ -11,13 +21,14 @@ export function sleep(ms: number): Promise<void> {
 }
 
 // Initialize Rettiwt with API key from X Auth Helper extension
-export function getTwitterClient() {
+export async function getTwitterClient() {
   const apiKey = process.env.TWITTER_API_KEY;
 
   if (!apiKey) {
     throw new Error('TWITTER_API_KEY not configured. Use X Auth Helper extension to generate it.');
   }
 
+  const Rettiwt = await loadRettiwt();
   return new Rettiwt({
     apiKey,
     logging: process.env.NODE_ENV === 'development',
@@ -57,7 +68,7 @@ export interface RawTweet {
 
 // Fetch home timeline (For You / recommended feed) with anti-detection delays
 export async function fetchHomeTimeline(count: number = 50): Promise<RawTweet[]> {
-  const client = getTwitterClient();
+  const client = await getTwitterClient();
 
   try {
     // Get recommended feed / "Para ti" (returns ~35 items per batch)
@@ -137,7 +148,7 @@ export async function postTweet(
   text: string,
   mediaUrls?: string[]
 ): Promise<{ success: boolean; tweetId?: string; error?: string }> {
-  const client = getTwitterClient();
+  const client = await getTwitterClient();
 
   try {
     let mediaIds: { id: string }[] | undefined;
