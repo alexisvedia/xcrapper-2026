@@ -7,6 +7,7 @@ export async function GET() {
     status: 'ok',
     message: 'XCrapper API is working',
     timestamp: new Date().toISOString(),
+    nodeVersion: process.version,
     env: {
       hasTwitterKey: !!process.env.TWITTER_API_KEY,
       hasGroqKey: !!process.env.GROQ_API_KEY,
