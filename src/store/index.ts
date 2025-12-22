@@ -225,6 +225,34 @@ interface AppState {
   setEditingTweetId: (id: string | null) => void;
 }
 
+// LocalStorage helpers for persistence
+const STORAGE_KEYS = {
+  currentView: 'xcrapper_currentView',
+  nextPublishTime: 'xcrapper_nextPublishTime',
+};
+
+const getStoredView = (): ViewType => {
+  if (typeof window === 'undefined') return 'inbox';
+  const stored = localStorage.getItem(STORAGE_KEYS.currentView);
+  if (stored && ['inbox', 'queue', 'published', 'config'].includes(stored)) {
+    return stored as ViewType;
+  }
+  return 'inbox';
+};
+
+const getStoredNextPublishTime = (): Date | null => {
+  if (typeof window === 'undefined') return null;
+  const stored = localStorage.getItem(STORAGE_KEYS.nextPublishTime);
+  if (stored) {
+    const date = new Date(stored);
+    // Only return if the date is in the future
+    if (date.getTime() > Date.now()) {
+      return date;
+    }
+  }
+  return null;
+};
+
 export const useAppStore = create<AppState>((set, get) => ({
   // Loading state
   isLoading: true,
@@ -241,6 +269,13 @@ export const useAppStore = create<AppState>((set, get) => ({
         db.fetchConfig(),
       ]);
 
+      // Restore persisted state from localStorage
+      const storedView = getStoredView();
+      const storedNextPublishTime = getStoredNextPublishTime();
+
+      // If autoPublishEnabled but nextPublishTime is expired or null, disable autoPublish
+      const shouldAutoPublish = config.autoPublishEnabled && storedNextPublishTime !== null;
+
       set({
         tweets,
         queue,
@@ -249,8 +284,16 @@ export const useAppStore = create<AppState>((set, get) => ({
         isInitialized: true,
         // Restore persisted state
         isScrapingActive: config.scrapingEnabled ?? false,
-        isAutoPublishing: config.autoPublishEnabled ?? false,
+        isAutoPublishing: shouldAutoPublish,
+        // Restore from localStorage
+        currentView: storedView,
+        nextPublishTime: storedNextPublishTime,
       });
+
+      // If auto-publish was disabled due to expired timer, update config
+      if (config.autoPublishEnabled && !shouldAutoPublish) {
+        db.saveConfig({ ...config, autoPublishEnabled: false });
+      }
     } catch (error) {
       console.error('Error initializing app:', error);
       set({ isLoading: false, isInitialized: true });
@@ -260,7 +303,13 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // View state
   currentView: 'inbox',
-  setCurrentView: (view) => set({ currentView: view }),
+  setCurrentView: (view) => {
+    // Persist to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.currentView, view);
+    }
+    set({ currentView: view });
+  },
 
   // Tweets
   tweets: [],
@@ -482,7 +531,17 @@ export const useAppStore = create<AppState>((set, get) => ({
     db.saveConfig({ ...currentConfig, autoPublishEnabled: active });
   },
   nextPublishTime: null,
-  setNextPublishTime: (time) => set({ nextPublishTime: time }),
+  setNextPublishTime: (time) => {
+    // Persist to localStorage
+    if (typeof window !== 'undefined') {
+      if (time) {
+        localStorage.setItem(STORAGE_KEYS.nextPublishTime, time.toISOString());
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.nextPublishTime);
+      }
+    }
+    set({ nextPublishTime: time });
+  },
   autoPublishCountdown: 0,
   setAutoPublishCountdown: (seconds) => set({ autoPublishCountdown: seconds }),
 

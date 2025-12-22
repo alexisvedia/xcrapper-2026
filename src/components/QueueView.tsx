@@ -388,12 +388,53 @@ export function QueueView() {
     showToast('Auto-publicación detenida', 'info');
   }, [showToast, setIsAutoPublishing, setNextPublishTime, setAutoPublishCountdown]);
 
-  // Handle auto-publish timer (countdown is handled in Sidebar)
+  // Sync countdown from nextPublishTime on mount and update every second
+  useEffect(() => {
+    if (!isAutoPublishing || !nextPublishTime) {
+      // Clear countdown if not auto-publishing
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+      return;
+    }
+
+    // Initial sync
+    const updateCountdown = () => {
+      const remaining = Math.max(0, Math.floor((nextPublishTime.getTime() - Date.now()) / 1000));
+      setAutoPublishCountdown(remaining);
+
+      // If countdown reaches 0, it will be handled by the timer effect below
+      if (remaining <= 0 && countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+    };
+
+    // Update immediately
+    updateCountdown();
+
+    // Update every second
+    countdownRef.current = setInterval(updateCountdown, 1000);
+
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+    };
+  }, [isAutoPublishing, nextPublishTime, setAutoPublishCountdown]);
+
+  // Handle auto-publish timer (triggers when countdown reaches 0)
   useEffect(() => {
     if (!isAutoPublishing || !nextPublishTime) return;
 
     // Auto-publish timer
     const timeUntilNext = nextPublishTime.getTime() - Date.now();
+
+    // Don't set timer if time already passed
+    if (timeUntilNext <= 0) return;
+
     autoPublishRef.current = setTimeout(async () => {
       const sortedQueue = [...queue].sort((a, b) => a.position - b.position);
 
@@ -422,7 +463,7 @@ export function QueueView() {
     return () => {
       if (autoPublishRef.current) clearTimeout(autoPublishRef.current);
     };
-  }, [isAutoPublishing, nextPublishTime, queue, publishTweet, stopAutoPublish, config.publishIntervalMinutes, showToast]);
+  }, [isAutoPublishing, nextPublishTime, queue, publishTweet, stopAutoPublish, config.publishIntervalMinutes, showToast, setNextPublishTime]);
 
   // Format countdown
   const formatCountdown = (seconds: number) => {
