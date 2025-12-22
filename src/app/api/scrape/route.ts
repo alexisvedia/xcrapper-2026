@@ -9,6 +9,15 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // Vercel Hobby plan limit
 
+// Health check / debug endpoint
+export async function GET() {
+  return Response.json({
+    status: 'ok',
+    message: 'Scrape API is working',
+    timestamp: new Date().toISOString()
+  });
+}
+
 // Random delay helper (returns ms)
 function randomDelay(minMs: number, maxMs: number): number {
   return Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
