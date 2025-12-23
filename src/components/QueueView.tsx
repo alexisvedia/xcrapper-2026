@@ -82,7 +82,7 @@ function SortableQueueItem({ item, estimatedPublishTime, onRemove, onSchedule, o
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-3 md:p-4">
+        <div className="flex-1 min-w-0 p-3 md:p-4 overflow-hidden">
           {/* Header row with metadata */}
           <div className="flex items-center gap-1.5 md:gap-2 mb-2 flex-wrap">
             <span className="w-6 h-6 rounded bg-[var(--accent-dim)] text-[var(--accent)] text-xs font-mono font-bold flex items-center justify-center flex-shrink-0">
@@ -115,7 +115,7 @@ function SortableQueueItem({ item, estimatedPublishTime, onRemove, onSchedule, o
           </div>
 
           {/* Tweet content */}
-          <p className="text-sm text-[var(--text-primary)] leading-relaxed">
+          <p className="text-sm text-[var(--text-primary)] leading-relaxed break-words overflow-hidden">
             {item.customText}
           </p>
 
@@ -164,12 +164,12 @@ function SortableQueueItem({ item, estimatedPublishTime, onRemove, onSchedule, o
           )}
 
           {/* Actions - Bottom on mobile for thumb reachability (Fitts's Law) */}
-          {/* Mobile: 3 equal buttons | Desktop: flex layout */}
-          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-[var(--border)] md:flex md:items-center">
+          {/* Mobile: 3 equal buttons | Desktop: inline compact buttons */}
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--border)]">
             <button
               onClick={() => onPublishNow(item.id)}
               disabled={isPublishing || item.customText.length > 280}
-              className="flex items-center justify-center gap-1 bg-[var(--accent)] text-[var(--bg-root)] rounded-lg text-xs font-medium py-2.5 min-h-[44px] hover:opacity-90 transition-opacity disabled:opacity-50 md:px-4"
+              className="flex-1 md:flex-none flex items-center justify-center gap-1.5 bg-[var(--accent)] text-[var(--bg-root)] rounded-lg text-xs font-medium py-2.5 md:py-2 min-h-[44px] md:min-h-0 md:px-3 hover:opacity-90 transition-opacity disabled:opacity-50"
               title="Publicar ahora"
             >
               {isThisPublishing ? (
@@ -177,22 +177,25 @@ function SortableQueueItem({ item, estimatedPublishTime, onRemove, onSchedule, o
               ) : (
                 <Send className="w-4 h-4" />
               )}
+              <span className="hidden md:inline">Publicar</span>
             </button>
             <button
               onClick={() => setShowScheduler(!showScheduler)}
               disabled={isPublishing}
-              className="flex items-center justify-center gap-1 bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-lg text-xs font-medium py-2.5 min-h-[44px] hover:bg-[var(--bg-hover)] transition-colors disabled:opacity-50"
+              className="flex-1 md:flex-none flex items-center justify-center gap-1.5 bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-lg text-xs font-medium py-2.5 md:py-2 min-h-[44px] md:min-h-0 md:px-3 hover:bg-[var(--bg-hover)] transition-colors disabled:opacity-50"
               title="Programar"
             >
               <Clock className="w-4 h-4" />
+              <span className="hidden md:inline">Programar</span>
             </button>
             <button
               onClick={() => onRemove(item.id)}
               disabled={isPublishing}
-              className="flex items-center justify-center gap-1 bg-[var(--red-dim)] text-[var(--red)] rounded-lg text-xs font-medium py-2.5 min-h-[44px] hover:bg-[var(--red)] hover:text-white transition-colors disabled:opacity-50 md:ml-auto"
+              className="flex-1 md:flex-none flex items-center justify-center gap-1.5 bg-[var(--red-dim)] text-[var(--red)] rounded-lg text-xs font-medium py-2.5 md:py-2 min-h-[44px] md:min-h-0 md:px-3 hover:bg-[var(--red)] hover:text-white transition-colors disabled:opacity-50 md:ml-auto"
               title="Eliminar"
             >
               <Trash2 className="w-4 h-4" />
+              <span className="hidden md:inline">Eliminar</span>
             </button>
           </div>
 
@@ -298,6 +301,12 @@ export function QueueView() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const autoPublishRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
+  const queueRef = useRef(queue); // Keep queue ref updated without causing effect re-runs
+
+  // Keep queueRef in sync with queue state
+  useEffect(() => {
+    queueRef.current = queue;
+  }, [queue]);
 
   // Calculate estimated publish time for each tweet based on auto-publish state
   const getEstimatedPublishTime = useCallback((position: number) => {
@@ -426,17 +435,13 @@ export function QueueView() {
   }, [isAutoPublishing, nextPublishTime, setAutoPublishCountdown]);
 
   // Handle auto-publish timer (triggers when countdown reaches 0)
+  // IMPORTANT: Uses queueRef instead of queue to avoid re-running effect when queue changes
   useEffect(() => {
     if (!isAutoPublishing || !nextPublishTime) return;
 
-    // Auto-publish timer
-    const timeUntilNext = nextPublishTime.getTime() - Date.now();
-
-    // Don't set timer if time already passed
-    if (timeUntilNext <= 0) return;
-
-    autoPublishRef.current = setTimeout(async () => {
-      const sortedQueue = [...queue].sort((a, b) => a.position - b.position);
+    const executeAutoPublish = async () => {
+      // Use queueRef.current to get the latest queue without causing re-renders
+      const sortedQueue = [...queueRef.current].sort((a, b) => a.position - b.position);
 
       if (sortedQueue.length === 0) {
         stopAutoPublish();
@@ -447,7 +452,7 @@ export function QueueView() {
       const nextItem = sortedQueue[0];
       const success = await publishTweet(nextItem);
 
-      if (success && queue.length > 1) {
+      if (success && queueRef.current.length > 1) {
         // Schedule next
         const intervalMs = (config.publishIntervalMinutes || 30) * 60 * 1000;
         setNextPublishTime(new Date(Date.now() + intervalMs));
@@ -458,12 +463,23 @@ export function QueueView() {
         stopAutoPublish();
         showToast('¡Todos los tweets publicados!', 'success');
       }
-    }, timeUntilNext);
+    };
+
+    // Auto-publish timer
+    const timeUntilNext = nextPublishTime.getTime() - Date.now();
+
+    // If time already passed (e.g., after page refresh or timer expired), execute immediately
+    if (timeUntilNext <= 0) {
+      executeAutoPublish();
+      return;
+    }
+
+    autoPublishRef.current = setTimeout(executeAutoPublish, timeUntilNext);
 
     return () => {
       if (autoPublishRef.current) clearTimeout(autoPublishRef.current);
     };
-  }, [isAutoPublishing, nextPublishTime, queue, publishTweet, stopAutoPublish, config.publishIntervalMinutes, showToast, setNextPublishTime]);
+  }, [isAutoPublishing, nextPublishTime, publishTweet, stopAutoPublish, config.publishIntervalMinutes, showToast, setNextPublishTime]);
 
   // Format countdown
   const formatCountdown = (seconds: number) => {
@@ -532,9 +548,9 @@ export function QueueView() {
             </p>
           </div>
 
-          {/* Auto-publish controls */}
+          {/* Auto-publish controls - Desktop only, mobile uses FAB */}
           {queue.length > 0 && (
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="hidden md:flex items-center gap-2 flex-shrink-0">
               {isAutoPublishing ? (
                 <>
                   <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[var(--green-dim)] text-[var(--green)]">
@@ -562,16 +578,26 @@ export function QueueView() {
                   ) : (
                     <PlayCircle className="w-3.5 h-3.5" />
                   )}
-                  <span className="hidden sm:inline ml-1">Auto</span>
+                  <span className="ml-1">Auto</span>
                 </button>
               )}
+            </div>
+          )}
+
+          {/* Mobile: Show countdown badge in header when auto-publishing */}
+          {queue.length > 0 && isAutoPublishing && (
+            <div className="md:hidden flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[var(--green-dim)] text-[var(--green)]">
+              <div className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse" />
+              <span className="text-xs font-mono">
+                {formatCountdown(autoPublishCountdown)}
+              </span>
             </div>
           )}
         </div>
       </header>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6">
+      {/* Content - pb-24 on mobile for FAB clearance */}
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-6">
         {queue.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -641,6 +667,33 @@ export function QueueView() {
           </motion.div>
         )}
       </div>
+
+      {/* FAB - Floating Action Button for Auto-publish (mobile only) */}
+      {queue.length > 0 && (
+        <div className="md:hidden fixed bottom-6 right-4 z-40">
+          {isAutoPublishing ? (
+            <button
+              onClick={stopAutoPublish}
+              disabled={isPublishing}
+              className="w-14 h-14 rounded-full bg-[var(--red)] text-white shadow-lg shadow-[var(--red)]/30 flex items-center justify-center active:scale-95 transition-transform disabled:opacity-50"
+            >
+              <StopCircle className="w-5 h-5" />
+            </button>
+          ) : (
+            <button
+              onClick={startAutoPublish}
+              disabled={isPublishing}
+              className="w-14 h-14 rounded-full bg-[var(--accent)] text-[var(--bg-root)] shadow-lg shadow-[var(--accent)]/30 flex items-center justify-center active:scale-95 transition-transform disabled:opacity-50"
+            >
+              {isPublishing ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <PlayCircle className="w-5 h-5" />
+              )}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

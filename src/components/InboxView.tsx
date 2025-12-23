@@ -506,8 +506,8 @@ export function InboxView() {
 
         {/* Filter - Tabs */}
         {!scrapeProgress && (
-          <div className="flex justify-center">
-            <div className="tabs overflow-x-auto no-scrollbar">
+          <div className="flex justify-center px-2">
+            <div className="tabs overflow-x-auto no-scrollbar max-w-full">
               <button
                 onClick={() => setActiveFilter('review')}
                 className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'review' ? 'active' : ''}`}

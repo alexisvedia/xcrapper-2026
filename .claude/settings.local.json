@@ -28,7 +28,10 @@
       "Bash(timeout 20 npx vercel logs:*)",
       "Bash(npm ls:*)",
       "Bash(npm show:*)",
-      "Bash(npm view:*)"
+      "Bash(npm view:*)",
+      "Bash(timeout 60 npx tsc:*)",
+      "Bash(timeout 20 bash:*)",
+      "Bash(ls:*)"
     ]
   }
 }
