@@ -61,14 +61,13 @@ function SortableQueueItem({ item, estimatedPublishTime, onRemove, onSchedule, o
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const urls = item.customText.match(urlRegex) || [];
 
-  return (
+  const cardContent = (
     <div
       ref={setNodeRef}
       style={style}
       className={`
-        card p-0 overflow-hidden transition-shadow duration-200
+        card p-0 overflow-hidden transition-all duration-300
         ${isDragging ? 'opacity-50 ring-2 ring-[var(--accent)] shadow-xl shadow-[var(--accent)]/20' : ''}
-        ${isThisPublishing ? 'opacity-70' : ''}
       `}
     >
       <div className="flex items-stretch">
@@ -277,6 +276,17 @@ function SortableQueueItem({ item, estimatedPublishTime, onRemove, onSchedule, o
       </AnimatePresence>
     </div>
   );
+
+  // Wrap in publishing animation when publishing
+  if (isThisPublishing) {
+    return (
+      <div className="publishing-wrapper">
+        {cardContent}
+      </div>
+    );
+  }
+
+  return cardContent;
 }
 
 export function QueueView() {

@@ -160,6 +160,51 @@ body {
 
 .card:hover { border-color: var(--border-hover); }
 
+/* Publishing animation wrapper - rotating border effect */
+.publishing-wrapper {
+  position: relative;
+  padding: 2px;
+  border-radius: calc(var(--radius) + 2px);
+  background: conic-gradient(
+    from var(--angle, 0deg),
+    transparent 0%,
+    transparent 30%,
+    var(--accent) 45%,
+    var(--accent) 55%,
+    transparent 70%,
+    transparent 100%
+  );
+  animation: rotate-border 1.5s linear infinite, pulse-glow 2s ease-in-out infinite;
+}
+
+.publishing-wrapper > .card {
+  border: none !important;
+}
+
+@keyframes rotate-border {
+  from { --angle: 0deg; }
+  to { --angle: 360deg; }
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 15px rgba(249, 115, 22, 0.2),
+      0 0 30px rgba(249, 115, 22, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 25px rgba(249, 115, 22, 0.35),
+      0 0 50px rgba(249, 115, 22, 0.15);
+  }
+}
+
 /* Inputs */
 .input, .textarea {
   background: var(--bg-secondary);

@@ -87,6 +87,7 @@ export interface AppConfig {
   targetLanguage: string;
   autoPublishEnabled: boolean;
   autoPublishMinScore: number;
+  nextPublishTime: string | null; // ISO string for Supabase sync
   aiSystemPrompt: string;
   rejectedPatterns: string[];
   aiModel: AIModel;

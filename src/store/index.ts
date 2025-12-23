@@ -36,6 +36,7 @@ const defaultConfig: AppConfig = {
   targetLanguage: 'es',
   autoPublishEnabled: false,
   autoPublishMinScore: 9,
+  nextPublishTime: null,
   aiSystemPrompt: `You are a senior AI and cutting-edge technology news editor. Evaluate tweets and create professional journalistic versions.
 
 === CRITICAL RULES ===
@@ -225,10 +226,9 @@ interface AppState {
   setEditingTweetId: (id: string | null) => void;
 }
 
-// LocalStorage helpers for persistence
+// LocalStorage helpers for persistence (view only, auto-publish syncs via Supabase)
 const STORAGE_KEYS = {
   currentView: 'xcrapper_currentView',
-  nextPublishTime: 'xcrapper_nextPublishTime',
 };
 
 const getStoredView = (): ViewType => {
@@ -240,15 +240,13 @@ const getStoredView = (): ViewType => {
   return 'inbox';
 };
 
-const getStoredNextPublishTime = (): Date | null => {
-  if (typeof window === 'undefined') return null;
-  const stored = localStorage.getItem(STORAGE_KEYS.nextPublishTime);
-  if (stored) {
-    const date = new Date(stored);
-    // Only return if the date is in the future
-    if (date.getTime() > Date.now()) {
-      return date;
-    }
+// Parse nextPublishTime from config (synced via Supabase)
+const parseNextPublishTime = (isoString: string | null): Date | null => {
+  if (!isoString) return null;
+  const date = new Date(isoString);
+  // Only return if the date is in the future
+  if (date.getTime() > Date.now()) {
+    return date;
   }
   return null;
 };
@@ -269,12 +267,12 @@ export const useAppStore = create<AppState>((set, get) => ({
         db.fetchConfig(),
       ]);
 
-      // Restore persisted state from localStorage
+      // Restore view from localStorage, auto-publish from Supabase config
       const storedView = getStoredView();
-      const storedNextPublishTime = getStoredNextPublishTime();
+      const nextPublishTime = parseNextPublishTime(config.nextPublishTime);
 
       // If autoPublishEnabled but nextPublishTime is expired or null, disable autoPublish
-      const shouldAutoPublish = config.autoPublishEnabled && storedNextPublishTime !== null;
+      const shouldAutoPublish = config.autoPublishEnabled && nextPublishTime !== null;
 
       set({
         tweets,
@@ -285,14 +283,15 @@ export const useAppStore = create<AppState>((set, get) => ({
         // Restore persisted state
         isScrapingActive: config.scrapingEnabled ?? false,
         isAutoPublishing: shouldAutoPublish,
-        // Restore from localStorage
+        // Restore view from localStorage
         currentView: storedView,
-        nextPublishTime: storedNextPublishTime,
+        // Restore auto-publish time from Supabase config
+        nextPublishTime,
       });
 
       // If auto-publish was disabled due to expired timer, update config
       if (config.autoPublishEnabled && !shouldAutoPublish) {
-        db.saveConfig({ ...config, autoPublishEnabled: false });
+        db.saveConfig({ ...config, autoPublishEnabled: false, nextPublishTime: null });
       }
     } catch (error) {
       console.error('Error initializing app:', error);
@@ -532,15 +531,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   nextPublishTime: null,
   setNextPublishTime: (time) => {
-    // Persist to localStorage
-    if (typeof window !== 'undefined') {
-      if (time) {
-        localStorage.setItem(STORAGE_KEYS.nextPublishTime, time.toISOString());
-      } else {
-        localStorage.removeItem(STORAGE_KEYS.nextPublishTime);
-      }
-    }
     set({ nextPublishTime: time });
+    // Persist to Supabase config (fire and forget for sync across devices)
+    const currentConfig = get().config;
+    db.saveConfig({
+      ...currentConfig,
+      nextPublishTime: time ? time.toISOString() : null
+    });
   },
   autoPublishCountdown: 0,
   setAutoPublishCountdown: (seconds) => set({ autoPublishCountdown: seconds }),
