@@ -540,20 +540,24 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Auto-publish state (global)
   isAutoPublishing: false,
   setIsAutoPublishing: (active) => {
-    set({ isAutoPublishing: active });
-    // Persist to config silently (fire and forget)
+    // Update both local state AND config object to avoid race conditions
     const currentConfig = get().config;
-    db.saveConfig({ ...currentConfig, autoPublishEnabled: active });
+    const updatedConfig = { ...currentConfig, autoPublishEnabled: active };
+    set({ isAutoPublishing: active, config: updatedConfig });
+    // Persist to Supabase
+    db.saveConfig(updatedConfig);
   },
   nextPublishTime: null,
   setNextPublishTime: (time) => {
-    set({ nextPublishTime: time });
-    // Persist to Supabase config (fire and forget for sync across devices)
+    // Update both local state AND config object to avoid race conditions
     const currentConfig = get().config;
-    db.saveConfig({
+    const updatedConfig = {
       ...currentConfig,
       nextPublishTime: time ? time.toISOString() : null
-    });
+    };
+    set({ nextPublishTime: time, config: updatedConfig });
+    // Persist to Supabase
+    db.saveConfig(updatedConfig);
   },
   autoPublishCountdown: 0,
   setAutoPublishCountdown: (seconds) => set({ autoPublishCountdown: seconds }),
