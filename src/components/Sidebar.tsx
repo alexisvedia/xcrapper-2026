@@ -1,16 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useAppStore } from '@/store';
-import { ViewType } from '@/types';
-import { Inbox, ListOrdered, CheckCircle, Settings, Radio, Power, Send, PanelLeftClose, PanelLeft, Menu, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState, useEffect } from "react";
+import { useAppStore } from "@/store";
+import { ViewType } from "@/types";
+import {
+  Inbox,
+  ListOrdered,
+  CheckCircle,
+  Settings,
+  Radio,
+  Power,
+  Send,
+  PanelLeftClose,
+  PanelLeft,
+  Menu,
+  X,
+} from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 
 const navItems: { id: ViewType; label: string; icon: typeof Inbox }[] = [
-  { id: 'inbox', label: 'Inbox', icon: Inbox },
-  { id: 'queue', label: 'Cola', icon: ListOrdered },
-  { id: 'published', label: 'Publicados', icon: CheckCircle },
-  { id: 'config', label: 'Config', icon: Settings },
+  { id: "inbox", label: "Inbox", icon: Inbox },
+  { id: "queue", label: "Cola", icon: ListOrdered },
+  { id: "published", label: "Publicados", icon: CheckCircle },
+  { id: "config", label: "Config", icon: Settings },
 ];
 
 export function Sidebar() {
@@ -26,23 +38,23 @@ export function Sidebar() {
     autoPublishCountdown,
   } = useAppStore();
 
-  const [lastScrapeText, setLastScrapeText] = useState('Nunca');
+  const [lastScrapeText, setLastScrapeText] = useState("Nunca");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const pendingCount = tweets.filter((t) => t.status === 'pending').length;
+  const pendingCount = tweets.filter((t) => t.status === "pending").length;
   const queueCount = queue.length;
-  const publishedCount = tweets.filter((t) => t.status === 'published').length;
+  const publishedCount = tweets.filter((t) => t.status === "published").length;
 
   // Load collapsed state from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('sidebarCollapsed');
-    if (saved) setCollapsed(saved === 'true');
+    const saved = localStorage.getItem("sidebarCollapsed");
+    if (saved) setCollapsed(saved === "true");
   }, []);
 
   // Save collapsed state
   useEffect(() => {
-    localStorage.setItem('sidebarCollapsed', String(collapsed));
+    localStorage.setItem("sidebarCollapsed", String(collapsed));
   }, [collapsed]);
 
   // Close mobile menu on view change
@@ -55,11 +67,11 @@ export function Sidebar() {
 
   const getCounts = (id: ViewType) => {
     switch (id) {
-      case 'inbox':
+      case "inbox":
         return pendingCount;
-      case 'queue':
+      case "queue":
         return queueCount;
-      case 'published':
+      case "published":
         return publishedCount;
       default:
         return 0;
@@ -69,12 +81,12 @@ export function Sidebar() {
   useEffect(() => {
     const updateLastScrape = () => {
       if (!lastScrapeTime) {
-        setLastScrapeText('Nunca');
+        setLastScrapeText("Nunca");
         return;
       }
       const diff = Date.now() - lastScrapeTime.getTime();
       const mins = Math.floor(diff / 60000);
-      if (mins < 1) setLastScrapeText('Ahora');
+      if (mins < 1) setLastScrapeText("Ahora");
       else if (mins < 60) setLastScrapeText(`${mins}m`);
       else setLastScrapeText(`${Math.floor(mins / 60)}h`);
     };
@@ -87,16 +99,20 @@ export function Sidebar() {
   const formatCountdown = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   useEffect(() => {
     if (!isAutoPublishing) return;
 
     const interval = setInterval(() => {
-      const { nextPublishTime, setAutoPublishCountdown } = useAppStore.getState();
+      const { nextPublishTime, setAutoPublishCountdown } =
+        useAppStore.getState();
       if (nextPublishTime) {
-        const secondsLeft = Math.max(0, Math.floor((nextPublishTime.getTime() - Date.now()) / 1000));
+        const secondsLeft = Math.max(
+          0,
+          Math.floor((nextPublishTime.getTime() - Date.now()) / 1000)
+        );
         setAutoPublishCountdown(secondsLeft);
       }
     }, 1000);
@@ -107,10 +123,62 @@ export function Sidebar() {
   const sidebarContent = (
     <>
       {/* Logo */}
-      <div className={`p-4 border-b border-[var(--border)] ${collapsed ? 'px-3' : 'p-6'}`}>
-        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
-          <div className="w-10 h-10 rounded-lg bg-[var(--bg-tertiary)] flex items-center justify-center flex-shrink-0">
-            <Radio className="w-5 h-5 text-[var(--text-primary)]" />
+      <div
+        className={`p-4 border-b border-[var(--border)] ${
+          collapsed ? "px-3" : "p-6"
+        }`}
+      >
+        <div
+          className={`flex items-center ${
+            collapsed ? "justify-center" : "gap-3"
+          }`}
+        >
+          <div className="w-10 h-10 rounded-lg bg-[var(--bg-tertiary)] flex items-center justify-center flex-shrink-0 p-2">
+            <svg
+              viewBox="0 0 512 512"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-full h-full drop-shadow-[0_0_8px_rgba(0,242,254,0.3)]"
+            >
+              <defs>
+                <linearGradient
+                  id="sidebar-grad"
+                  x1="0%"
+                  y1="0%"
+                  x2="100%"
+                  y2="100%"
+                >
+                  <stop
+                    offset="0%"
+                    style={{ stopColor: "#00f2fe", stopOpacity: 1 }}
+                  />
+                  <stop
+                    offset="100%"
+                    style={{ stopColor: "#4facfe", stopOpacity: 1 }}
+                  />
+                </linearGradient>
+              </defs>
+              <path
+                d="M120 120L256 256M392 120L256 256M256 256L120 392M256 256L392 392"
+                stroke="url(#sidebar-grad)"
+                strokeWidth="60"
+                strokeLinecap="round"
+              />
+              <path
+                d="M350 150C380 180 400 220 400 256C400 292 380 332 350 362"
+                stroke="url(#sidebar-grad)"
+                strokeWidth="20"
+                strokeLinecap="round"
+                opacity="0.6"
+              />
+              <path
+                d="M162 150C132 180 112 220 112 256C112 292 132 332 162 362"
+                stroke="url(#sidebar-grad)"
+                strokeWidth="20"
+                strokeLinecap="round"
+                opacity="0.6"
+              />
+            </svg>
           </div>
           {!collapsed && (
             <h1 className="text-lg font-semibold tracking-tight">XCrapper</h1>
@@ -125,18 +193,52 @@ export function Sidebar() {
           className="w-[calc(100%-2rem)] px-4 py-3 mx-4 mt-4 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--bg-tertiary)] transition-all duration-200 text-left group"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">Scraping</span>
+            <span className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">
+              Scraping
+            </span>
             <div className="flex items-center gap-2">
-              <Power className={`w-3.5 h-3.5 transition-colors ${isScrapingActive ? 'text-[var(--green)]' : 'text-[var(--text-muted)]'}`} />
-              <div className={`w-2 h-2 rounded-full ${isScrapingActive ? 'bg-[var(--green)] animate-pulse' : 'bg-[var(--text-muted)]'}`} />
-              <span className={`text-xs font-mono ${isScrapingActive ? 'text-[var(--green)]' : 'text-[var(--text-muted)]'}`}>
-                {isScrapingActive ? 'Activo' : 'Pausado'}
+              <Power
+                className={`w-3.5 h-3.5 transition-colors ${
+                  isScrapingActive
+                    ? "text-[var(--green)]"
+                    : "text-[var(--text-muted)]"
+                }`}
+              />
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  isScrapingActive
+                    ? "bg-[var(--green)] animate-pulse"
+                    : "bg-[var(--text-muted)]"
+                }`}
+              />
+              <span
+                className={`text-xs font-mono ${
+                  isScrapingActive
+                    ? "text-[var(--green)]"
+                    : "text-[var(--text-muted)]"
+                }`}
+              >
+                {isScrapingActive ? "Activo" : "Pausado"}
               </span>
             </div>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
-              <Radio className="w-3 h-3" />
+              <div className="w-3 h-3 flex items-center justify-center">
+                <svg
+                  viewBox="0 0 512 512"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-full h-full opacity-60"
+                >
+                  <path
+                    d="M120 120L256 256M392 120L256 256M256 256L120 392M256 256L392 392"
+                    stroke="currentColor"
+                    strokeWidth="60"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
               <span>Último: {lastScrapeText}</span>
             </div>
           </div>
@@ -145,9 +247,15 @@ export function Sidebar() {
         <button
           onClick={() => setScrapingActive(!isScrapingActive)}
           className="w-10 h-10 mx-auto mt-4 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] hover:border-[var(--accent)] flex items-center justify-center"
-          title={isScrapingActive ? 'Scraping activo' : 'Scraping pausado'}
+          title={isScrapingActive ? "Scraping activo" : "Scraping pausado"}
         >
-          <Power className={`w-4 h-4 ${isScrapingActive ? 'text-[var(--green)]' : 'text-[var(--text-muted)]'}`} />
+          <Power
+            className={`w-4 h-4 ${
+              isScrapingActive
+                ? "text-[var(--green)]"
+                : "text-[var(--text-muted)]"
+            }`}
+          />
         </button>
       )}
 
@@ -156,16 +264,30 @@ export function Sidebar() {
         <div
           className={`w-[calc(100%-2rem)] px-4 py-3 mx-4 mt-2 rounded-lg border transition-all duration-200 ${
             isAutoPublishing
-              ? 'bg-[var(--green-dim)] border-[var(--green)]'
-              : 'bg-[var(--bg-secondary)] border-[var(--border)]'
+              ? "bg-[var(--green-dim)] border-[var(--green)]"
+              : "bg-[var(--bg-secondary)] border-[var(--border)]"
           }`}
         >
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">Publicación</span>
+            <span className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">
+              Publicación
+            </span>
             <div className="flex items-center gap-2">
-              <Send className={`w-3.5 h-3.5 ${isAutoPublishing ? 'text-[var(--green)]' : 'text-[var(--text-muted)]'}`} />
-              <span className={`text-xs font-mono ${isAutoPublishing ? 'text-[var(--green)]' : 'text-[var(--text-muted)]'}`}>
-                {isAutoPublishing ? 'Auto' : 'Manual'}
+              <Send
+                className={`w-3.5 h-3.5 ${
+                  isAutoPublishing
+                    ? "text-[var(--green)]"
+                    : "text-[var(--text-muted)]"
+                }`}
+              />
+              <span
+                className={`text-xs font-mono ${
+                  isAutoPublishing
+                    ? "text-[var(--green)]"
+                    : "text-[var(--text-muted)]"
+                }`}
+              >
+                {isAutoPublishing ? "Auto" : "Manual"}
               </span>
             </div>
           </div>
@@ -186,19 +308,31 @@ export function Sidebar() {
         <div
           className={`w-10 h-10 mx-auto mt-2 rounded-lg border flex items-center justify-center ${
             isAutoPublishing
-              ? 'bg-[var(--green-dim)] border-[var(--green)]'
-              : 'bg-[var(--bg-secondary)] border-[var(--border)]'
+              ? "bg-[var(--green-dim)] border-[var(--green)]"
+              : "bg-[var(--bg-secondary)] border-[var(--border)]"
           }`}
-          title={isAutoPublishing ? `Auto-publicación: ${formatCountdown(autoPublishCountdown)}` : 'Publicación manual'}
+          title={
+            isAutoPublishing
+              ? `Auto-publicación: ${formatCountdown(autoPublishCountdown)}`
+              : "Publicación manual"
+          }
         >
-          <Send className={`w-4 h-4 ${isAutoPublishing ? 'text-[var(--green)]' : 'text-[var(--text-muted)]'}`} />
+          <Send
+            className={`w-4 h-4 ${
+              isAutoPublishing
+                ? "text-[var(--green)]"
+                : "text-[var(--text-muted)]"
+            }`}
+          />
         </div>
       )}
 
       {/* Navigation */}
-      <nav className={`flex-1 p-4 space-y-1 ${collapsed ? 'px-2' : ''}`}>
+      <nav className={`flex-1 p-4 space-y-1 ${collapsed ? "px-2" : ""}`}>
         {!collapsed && (
-          <p className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider px-3 mb-3">Navegación</p>
+          <p className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider px-3 mb-3">
+            Navegación
+          </p>
         )}
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -212,27 +346,33 @@ export function Sidebar() {
               whileTap={{ scale: 0.98 }}
               title={collapsed ? item.label : undefined}
               className={`
-                w-full flex items-center ${collapsed ? 'justify-center' : 'justify-between'}
-                ${collapsed ? 'p-3' : 'px-3 py-2.5'} rounded-lg
+                w-full flex items-center ${
+                  collapsed ? "justify-center" : "justify-between"
+                }
+                ${collapsed ? "p-3" : "px-3 py-2.5"} rounded-lg
                 font-medium text-sm transition-all duration-200 relative
-                ${isActive
-                  ? 'bg-[var(--accent-dim)] text-[var(--accent)]'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
+                ${
+                  isActive
+                    ? "bg-[var(--accent-dim)] text-[var(--accent)]"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]"
                 }
               `}
             >
-              <div className={`flex items-center ${collapsed ? '' : 'gap-3'}`}>
+              <div className={`flex items-center ${collapsed ? "" : "gap-3"}`}>
                 <Icon className="w-5 h-5" />
                 {!collapsed && <span>{item.label}</span>}
               </div>
               {count > 0 && !collapsed && (
-                <span className={`
+                <span
+                  className={`
                   px-2 py-0.5 rounded text-xs font-mono font-semibold
-                  ${isActive
-                    ? 'bg-[var(--accent)] text-[var(--bg-root)]'
-                    : 'bg-[var(--bg-tertiary)] text-[var(--text-muted)]'
+                  ${
+                    isActive
+                      ? "bg-[var(--accent)] text-[var(--bg-root)]"
+                      : "bg-[var(--bg-tertiary)] text-[var(--text-muted)]"
                   }
-                `}>
+                `}
+                >
                   {count}
                 </span>
               )}
@@ -273,7 +413,7 @@ export function Sidebar() {
       {/* Desktop Sidebar */}
       <aside
         className={`hidden md:flex h-screen bg-[var(--bg-primary)] border-r border-[var(--border)] flex-col transition-all duration-300 ${
-          collapsed ? 'w-[72px]' : 'w-64'
+          collapsed ? "w-[72px]" : "w-64"
         }`}
       >
         {sidebarContent}
@@ -291,10 +431,10 @@ export function Sidebar() {
               className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
             />
             <motion.aside
-              initial={{ x: '-100%' }}
+              initial={{ x: "-100%" }}
               animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
               className="md:hidden fixed inset-y-0 left-0 z-50 w-72 bg-[var(--bg-primary)] border-r border-[var(--border)] flex flex-col"
             >
               <button
