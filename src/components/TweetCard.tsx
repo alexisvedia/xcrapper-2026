@@ -382,15 +382,15 @@ export function TweetCard({ tweet, index }: TweetCardProps) {
         </div>
       )}
 
-      {/* Actions for rejected tweets - can approve with reason */}
+      {/* Actions for rejected tweets - can send for prompt review */}
       {tweet.status === 'rejected' && (
         <div className="flex items-center gap-2 px-3 md:px-4 py-3 border-t border-[var(--border)]">
           <button
             onClick={openApproveModal}
-            className="flex-1 md:flex-none btn btn-approve text-sm py-2.5 min-h-[44px]"
+            className="flex-1 md:flex-none btn btn-secondary text-sm py-2.5 min-h-[44px]"
           >
-            <Check className="w-4 h-4" />
-            <span className="ml-1">Aprobar (indicar por qué)</span>
+            <Pencil className="w-4 h-4" />
+            <span className="ml-1">Revisar prompt</span>
           </button>
         </div>
       )}
@@ -428,10 +428,13 @@ export function TweetCard({ tweet, index }: TweetCardProps) {
             >
               <div className="px-4 py-3 border-b border-[var(--border)]">
                 <h3 className="text-sm font-medium text-[var(--text-primary)]">
-                  {reasonModal.type === 'reject' ? '¿Por qué rechazas este tweet?' : '¿Por qué apruebas este tweet?'}
+                  {reasonModal.type === 'reject' ? '¿Por qué rechazas este tweet?' : 'Revisar prompt del AI'}
                 </h3>
                 <p className="text-xs text-[var(--text-muted)] mt-1">
-                  Esta info ayudará a mejorar el prompt del AI
+                  {reasonModal.type === 'reject'
+                    ? 'Esta info ayudará a mejorar el prompt del AI'
+                    : 'Explica por qué el AI debería haber aprobado este tweet'
+                  }
                 </p>
               </div>
               <div className="p-4">
@@ -442,7 +445,7 @@ export function TweetCard({ tweet, index }: TweetCardProps) {
                   onKeyDown={handleReasonKeyDown}
                   placeholder={reasonModal.type === 'reject'
                     ? "Ej: No es noticia, es opinión personal..."
-                    : "Ej: El AI lo rechazó pero es relevante porque..."
+                    : "Ej: Es noticia de un modelo nuevo, debería tener score 9..."
                   }
                   className="textarea text-sm w-full"
                   rows={3}
