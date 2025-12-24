@@ -242,11 +242,12 @@ const getStoredView = (): ViewType => {
 };
 
 // Parse nextPublishTime from config (synced via Supabase)
+// Returns the date even if in the past - QueueView will handle expired timers
 const parseNextPublishTime = (isoString: string | null): Date | null => {
   if (!isoString) return null;
   const date = new Date(isoString);
-  // Only return if the date is in the future
-  if (date.getTime() > Date.now()) {
+  // Return the date if it's valid (QueueView handles expired timers)
+  if (!isNaN(date.getTime())) {
     return date;
   }
   return null;
@@ -272,9 +273,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       const storedView = getStoredView();
       const nextPublishTime = parseNextPublishTime(config.nextPublishTime);
 
-      // If autoPublishEnabled but nextPublishTime is expired or null, disable autoPublish
-      const shouldAutoPublish = config.autoPublishEnabled && nextPublishTime !== null;
-
       set({
         tweets,
         queue,
@@ -283,17 +281,13 @@ export const useAppStore = create<AppState>((set, get) => ({
         isInitialized: true,
         // Restore persisted state
         isScrapingActive: config.scrapingEnabled ?? false,
-        isAutoPublishing: shouldAutoPublish,
+        // Restore auto-publish state from Supabase - QueueView handles expired timers
+        isAutoPublishing: config.autoPublishEnabled,
         // Restore view from localStorage
         currentView: storedView,
         // Restore auto-publish time from Supabase config
         nextPublishTime,
       });
-
-      // If auto-publish was disabled due to expired timer, update config
-      if (config.autoPublishEnabled && !shouldAutoPublish) {
-        db.saveConfig({ ...config, autoPublishEnabled: false, nextPublishTime: null });
-      }
     } catch (error) {
       console.error('Error initializing app:', error);
       set({ isLoading: false, isInitialized: true });
