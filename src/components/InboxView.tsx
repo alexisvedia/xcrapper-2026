@@ -509,8 +509,8 @@ export function InboxView() {
 
         {/* Filter - Tabs */}
         {!scrapeProgress && (
-          <div className="flex flex-col gap-2">
-            <div className="flex justify-center -mx-14 px-4 md:mx-0 md:px-0">
+          <div className="flex flex-col gap-2 relative">
+            <div className="flex justify-center -ml-5 md:ml-0">
               <div className="tabs">
                 <button
                   onClick={() => setActiveFilter('all')}
