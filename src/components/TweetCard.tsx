@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '@/store';
 import { ScrapedTweet } from '@/types';
 import { Check, X, Pencil, ExternalLink, Play, ChevronDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'motion/react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -19,6 +19,21 @@ export function TweetCard({ tweet, index }: TweetCardProps) {
   const [expandedMedia, setExpandedMedia] = useState<{ url: string; type: string } | null>(null);
   const [showOriginal, setShowOriginal] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Swipe logic
+  const x = useMotionValue(0);
+  const checkOpacity = useTransform(x, [50, 100], [0, 1]);
+  const xOpacity = useTransform(x, [-100, -50], [1, 0]);
+  
+  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (info.offset.x > 100) {
+      if (navigator.vibrate) navigator.vibrate(50);
+      approveTweet(tweet.id);
+    } else if (info.offset.x < -100) {
+      if (navigator.vibrate) navigator.vibrate(50);
+      rejectTweet(tweet.id, 'Rechazado manualmente');
+    }
+  };
 
   const isEditing = editingTweetId === tweet.id;
   const charCount = editedContent.length;
@@ -205,7 +220,24 @@ export function TweetCard({ tweet, index }: TweetCardProps) {
       </div>
 
       {/* Content - Mobile Only: Processed first with collapsible original */}
-      <div className="md:hidden">
+      <div className="md:hidden relative overflow-hidden">
+        {tweet.status === 'pending' && (
+          <>
+            <motion.div style={{ opacity: checkOpacity }} className="absolute inset-y-0 left-0 flex items-center pl-6 bg-[var(--green)] w-full z-0">
+              <Check className="text-[var(--bg-primary)] w-6 h-6" />
+            </motion.div>
+            <motion.div style={{ opacity: xOpacity }} className="absolute inset-y-0 right-0 flex items-center justify-end pr-6 bg-[var(--red)] w-full z-0">
+              <X className="text-[var(--bg-primary)] w-6 h-6" />
+            </motion.div>
+          </>
+        )}
+        <motion.div
+          drag={tweet.status === 'pending' && !isEditing ? "x" : false}
+          dragConstraints={{ left: 0, right: 0 }}
+          style={{ x }}
+          onDragEnd={handleDragEnd}
+          className="relative z-10 bg-[var(--bg-primary)]"
+        >
         {/* Processed Content - Primary on mobile */}
         <div className="p-3 bg-[var(--bg-secondary)]">
           <div className="flex items-center justify-between mb-2">
@@ -291,6 +323,7 @@ export function TweetCard({ tweet, index }: TweetCardProps) {
             )}
           </AnimatePresence>
         </div>
+        </motion.div>
       </div>
 
       {/* Actions - Only show for pending tweets */}

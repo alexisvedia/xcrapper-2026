@@ -403,6 +403,19 @@ export async function cleanupOldTweets(daysOld: number): Promise<{ deleted: numb
   return { deleted: (rejectedCount || 0) + (publishedCount || 0) };
 }
 
+export async function deleteTweets(ids: string[]): Promise<boolean> {
+  const { error } = await supabase
+    .from('scraped_tweets')
+    .delete()
+    .in('id', ids);
+
+  if (error) {
+    console.error('Error deleting tweets:', error);
+    return false;
+  }
+  return true;
+}
+
 // ========== SIMILARITY CHECK ==========
 
 export async function getRecentPublishedContent(days: number): Promise<string[]> {

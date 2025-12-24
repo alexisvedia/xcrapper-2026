@@ -154,6 +154,7 @@ interface AppState {
   approveTweet: (id: string) => Promise<void>;
   rejectTweet: (id: string, reason?: string) => Promise<void>;
   updateTweetContent: (id: string, content: string) => Promise<void>;
+  deleteTweets: (ids: string[]) => Promise<void>;
 
   // Queue
   queue: QueueItem[];
@@ -386,6 +387,27 @@ export const useAppStore = create<AppState>((set, get) => ({
         ),
       }));
       get().showToast('Error al actualizar contenido', 'error');
+    }
+  },
+
+  deleteTweets: async (ids) => {
+    const oldTweets = get().tweets;
+
+    // Optimistic update
+    set((state) => ({
+      tweets: state.tweets.filter((t) => !ids.includes(t.id)),
+    }));
+
+    const success = await db.deleteTweets(ids);
+    if (success) {
+      get().showToast(
+        ids.length === 1 ? 'Tweet eliminado' : `${ids.length} tweets eliminados`,
+        'success'
+      );
+    } else {
+      // Rollback
+      set({ tweets: oldTweets });
+      get().showToast('Error al eliminar tweets', 'error');
     }
   },
 

@@ -3,7 +3,7 @@
 import { useAppStore } from '@/store';
 import { QueueItem } from '@/types';
 import { ListOrdered, GripVertical, Trash2, Clock, Send, Calendar, Loader2, Image as ImageIcon, Film, Play, Timer, ExternalLink, PlayCircle, StopCircle, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo, useDragControls } from 'motion/react';
 import {
   DndContext,
   closestCenter,
@@ -48,8 +48,34 @@ function SortableQueueItem({ item, estimatedPublishTime, onRemove, onSchedule, o
 
   const [showScheduler, setShowScheduler] = useState(false);
   const [expandedMedia, setExpandedMedia] = useState<{ url: string; type: string } | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Swipe-to-delete motion values
+  const x = useMotionValue(0);
+  const dragControls = useDragControls();
+  const deleteOpacity = useTransform(x, [-100, -50], [1, 0]);
+  const deleteScale = useTransform(x, [-100, -50], [1, 0.8]);
+  
   const isThisPublishing = isPublishing && publishingId === item.id;
   const hasMedia = item.tweet.media && item.tweet.media.length > 0;
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.matchMedia('(max-width: 768px)').matches || 'ontouchstart' in window);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (info.offset.x < -100) {
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+      onRemove(item.id);
+    }
+  };
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -66,24 +92,48 @@ function SortableQueueItem({ item, estimatedPublishTime, onRemove, onSchedule, o
       ref={setNodeRef}
       style={style}
       className={`
-        card p-0 overflow-hidden transition-all duration-300
+        card p-0 overflow-hidden transition-all duration-300 relative group
         ${isDragging ? 'opacity-50 ring-2 ring-[var(--accent)] shadow-xl shadow-[var(--accent)]/20' : ''}
       `}
     >
-      <div className="flex items-stretch">
-        {/* Drag Handle */}
-        <div
-          {...attributes}
-          {...listeners}
-          className="drag-handle flex items-center justify-center px-3 bg-[var(--bg-secondary)] border-r border-[var(--border)]"
-        >
-          <GripVertical className="w-5 h-5" />
-        </div>
+      {/* Delete Indicator Background */}
+      <motion.div 
+        style={{ opacity: deleteOpacity }}
+        className="absolute inset-0 bg-[var(--red)] flex items-center justify-end pr-6 z-0 rounded-xl"
+      >
+        <motion.div style={{ scale: deleteScale }}>
+          <Trash2 className="w-6 h-6 text-white" />
+        </motion.div>
+      </motion.div>
 
-        {/* Content */}
-        <div className="flex-1 min-w-0 p-3 md:p-4 overflow-hidden">
-          {/* Header row with metadata */}
-          <div className="flex items-center gap-1.5 md:gap-2 mb-2 flex-wrap">
+      {/* Swipeable Content */}
+      <motion.div
+        style={{ x, touchAction: 'pan-y' }}
+        drag={isMobile && !isPublishing ? "x" : false}
+        dragControls={dragControls}
+        dragListener={false}
+        dragConstraints={{ right: 0 }}
+        dragElastic={{ right: 0.1 }}
+        onDragEnd={handleDragEnd}
+        className="relative z-10 bg-[var(--bg-secondary)] h-full"
+      >
+        <div className="flex items-stretch h-full">
+          {/* Drag Handle */}
+          <div
+            {...attributes}
+            {...listeners}
+            className="drag-handle flex items-center justify-center px-3 bg-[var(--bg-secondary)] border-r border-[var(--border)] cursor-grab active:cursor-grabbing"
+          >
+            <GripVertical className="w-5 h-5 text-[var(--text-muted)]" />
+          </div>
+
+          {/* Content */}
+          <div 
+            className="flex-1 min-w-0 p-3 md:p-4 overflow-hidden"
+            onPointerDown={(e) => isMobile && !isPublishing && dragControls.start(e)}
+          >
+            {/* Header row with metadata */}
+            <div className="flex items-center gap-1.5 md:gap-2 mb-2 flex-wrap">
             <span className="w-6 h-6 rounded bg-[var(--accent-dim)] text-[var(--accent)] text-xs font-mono font-bold flex items-center justify-center flex-shrink-0">
               {item.position + 1}
             </span>
@@ -231,6 +281,7 @@ function SortableQueueItem({ item, estimatedPublishTime, onRemove, onSchedule, o
           </AnimatePresence>
         </div>
       </div>
+      </motion.div>
 
       {/* Media Lightbox Modal */}
       <AnimatePresence>

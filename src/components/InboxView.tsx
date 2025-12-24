@@ -2,11 +2,11 @@
 
 import { useAppStore } from '@/store';
 import { TweetCard } from './TweetCard';
-import { RefreshCw, Loader2, Square, ChevronDown } from 'lucide-react';
+import { RefreshCw, Loader2, Square, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-type FilterPreset = 'review' | 'pending' | 'all' | 'approved' | 'rejected';
+type FilterPreset = 'all' | 'pending' | 'rejected';
 
 export function InboxView() {
   const {
@@ -29,7 +29,7 @@ export function InboxView() {
     clearScrapeLog,
   } = useAppStore();
 
-  const [activeFilter, setActiveFilter] = useState<FilterPreset>('review');
+  const [activeFilter, setActiveFilter] = useState<FilterPreset>('pending');
   const [isApprovingAll, setIsApprovingAll] = useState(false);
   const [countdown, setCountdown] = useState<string>('');
   const [showLog, setShowLog] = useState(true); // Default to showing log
@@ -114,20 +114,24 @@ export function InboxView() {
     }
   }, [isScrapingLoading]);
 
-  // Filter logic - simplified presets
+  // Filter logic - Todos (all scraped), Pendientes (score >= min), Rechazados (score < min)
+  const minScore = config.minRelevanceScore || 7;
+
   const filteredTweets = tweets
     .filter((t) => {
+      // Exclude published tweets from all views
+      if (t.status === 'published') return false;
+
       switch (activeFilter) {
-        case 'review':
-          return t.status === 'pending' && t.relevanceScore >= 7;
-        case 'pending':
-          return t.status === 'pending';
         case 'all':
+          // Show all scraped tweets (not published)
           return true;
-        case 'approved':
-          return t.status === 'approved';
+        case 'pending':
+          // Tweets with score >= minScore that haven't been rejected
+          return t.status === 'pending' && t.relevanceScore >= minScore;
         case 'rejected':
-          return t.status === 'rejected';
+          // Tweets below minScore OR manually rejected
+          return t.status === 'rejected' || (t.status === 'pending' && t.relevanceScore < minScore);
         default:
           return true;
       }
@@ -135,11 +139,9 @@ export function InboxView() {
     .sort((a, b) => b.relevanceScore - a.relevanceScore);
 
   // Counts
-  const pendingCount = tweets.filter((t) => t.status === 'pending').length;
-  const reviewCount = tweets.filter((t) => t.status === 'pending' && t.relevanceScore >= 7).length;
-  const allCount = tweets.length;
-  const approvedCount = tweets.filter((t) => t.status === 'approved').length;
-  const rejectedCount = tweets.filter((t) => t.status === 'rejected').length;
+  const allCount = tweets.filter((t) => t.status !== 'published').length;
+  const pendingCount = tweets.filter((t) => t.status === 'pending' && t.relevanceScore >= minScore).length;
+  const rejectedCount = tweets.filter((t) => t.status === 'rejected' || (t.status === 'pending' && t.relevanceScore < minScore)).length;
 
   const handleScrape = async () => {
     const abortController = new AbortController();
@@ -269,18 +271,19 @@ export function InboxView() {
   };
 
   const handleApproveAll = async () => {
-    const tweetsToApprove = filteredTweets.filter(t => t.status === 'pending');
+    // Auto-approve all pending tweets with score >= minScore
+    const tweetsToApprove = tweets.filter(t =>
+      t.status === 'pending' && t.relevanceScore >= minScore
+    );
     if (tweetsToApprove.length === 0) return;
 
     setIsApprovingAll(true);
     for (const tweet of tweetsToApprove) {
       await approveTweet(tweet.id);
     }
-    showToast(`${tweetsToApprove.length} tweets aprobados`, 'success');
+    showToast(`${tweetsToApprove.length} tweets aprobados y añadidos a la cola`, 'success');
     setIsApprovingAll(false);
   };
-
-  const pendingInView = filteredTweets.filter(t => t.status === 'pending').length;
 
   return (
     <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[var(--bg-primary)]">
@@ -290,7 +293,7 @@ export function InboxView() {
           <div className="min-w-0 flex-1">
             <h1 className="text-base md:text-lg font-medium text-[var(--text-primary)]">Inbox</h1>
             <p className="text-[11px] md:text-sm text-[var(--text-secondary)] mt-0.5">
-              {pendingCount} pendientes · {reviewCount} relevantes
+              {pendingCount} pendientes · {rejectedCount} rechazados
               {isScrapingActive && countdown && (
                 <span className="text-[var(--text-muted)]"> · {countdown}</span>
               )}
@@ -298,14 +301,14 @@ export function InboxView() {
           </div>
           {/* Desktop: Scrape button | Mobile: handled by FAB */}
           <div className="hidden md:flex items-center gap-2 flex-shrink-0">
-            {pendingInView > 0 && (
+            {pendingCount > 0 && (
               <button
                 onClick={handleApproveAll}
                 disabled={isApprovingAll || isScrapingLoading}
                 className="btn btn-ghost text-[var(--green)] text-sm px-3"
               >
                 {isApprovingAll && <Loader2 className="w-4 h-4 spinner mr-1" />}
-                Aprobar todos ({pendingInView})
+                Aprobar todos ({pendingCount})
               </button>
             )}
             {isScrapingLoading ? (
@@ -322,14 +325,14 @@ export function InboxView() {
           </div>
           {/* Mobile: Only show approve all and loading status */}
           <div className="md:hidden flex items-center gap-2 flex-shrink-0">
-            {pendingInView > 0 && !isScrapingLoading && (
+            {pendingCount > 0 && !isScrapingLoading && (
               <button
                 onClick={handleApproveAll}
                 disabled={isApprovingAll}
                 className="btn btn-ghost text-[var(--green)] text-xs px-2 py-1.5"
               >
                 {isApprovingAll && <Loader2 className="w-3.5 h-3.5 spinner mr-1" />}
-                Aprobar ({pendingInView})
+                Aprobar ({pendingCount})
               </button>
             )}
             {isScrapingLoading && (
@@ -506,35 +509,49 @@ export function InboxView() {
 
         {/* Filter - Tabs */}
         {!scrapeProgress && (
-          <div className="flex justify-center px-2">
-            <div className="tabs overflow-x-auto no-scrollbar max-w-full">
-              <button
-                onClick={() => setActiveFilter('review')}
-                className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'review' ? 'active' : ''}`}
-                title="Tweets pendientes con score 7 o más"
-              >
-                Relevantes ({reviewCount})
-              </button>
-              <button
-                onClick={() => setActiveFilter('pending')}
-                className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'pending' ? 'active' : ''}`}
-                title="Todos los tweets pendientes"
-              >
-                Pendientes ({pendingCount})
-              </button>
-              <button
-                onClick={() => setActiveFilter('approved')}
-                className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'approved' ? 'active' : ''}`}
-              >
-                Aprobados ({approvedCount})
-              </button>
-              <button
-                onClick={() => setActiveFilter('rejected')}
-                className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'rejected' ? 'active' : ''}`}
-              >
-                Rechazados ({rejectedCount})
-              </button>
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-center px-2 w-full">
+              <div className="tabs overflow-x-auto no-scrollbar max-w-full flex justify-center w-full">
+                <button
+                  onClick={() => setActiveFilter('all')}
+                  className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'all' ? 'active' : ''}`}
+                  title="Todos los tweets scrapeados"
+                >
+                  Todos ({allCount})
+                </button>
+                <button
+                  onClick={() => setActiveFilter('pending')}
+                  className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'pending' ? 'active' : ''}`}
+                  title={`Tweets con score >= ${minScore}`}
+                >
+                  Pendientes ({pendingCount})
+                </button>
+                <button
+                  onClick={() => setActiveFilter('rejected')}
+                  className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'rejected' ? 'active' : ''}`}
+                  title={`Tweets con score < ${minScore} o rechazados`}
+                >
+                  Rechazados ({rejectedCount})
+                </button>
+              </div>
             </div>
+            {/* Auto-approve button - only show in Pendientes tab */}
+            {activeFilter === 'pending' && pendingCount > 0 && (
+              <div className="flex justify-center">
+                <button
+                  onClick={handleApproveAll}
+                  disabled={isApprovingAll}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--green-dim)] text-[var(--green)] hover:bg-[var(--green)] hover:text-white transition-colors disabled:opacity-50"
+                >
+                  {isApprovingAll ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  )}
+                  Auto aprobar ({pendingCount})
+                </button>
+              </div>
+            )}
           </div>
         )}
       </header>
