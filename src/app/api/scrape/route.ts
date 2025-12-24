@@ -309,10 +309,13 @@ export async function POST(request: Request) {
             existingContent.push(processedWithUrls);
           }
 
-          // Check if should auto-queue (high relevance + auto-publish enabled)
-          const shouldAutoQueue = !analysis.shouldReject &&
-            config.autoPublishEnabled &&
-            analysis.relevance >= (config.autoPublishMinScore || 9);
+          // Check if should auto-queue
+          // Option 1: Auto-publish with high score (autoPublishEnabled + score >= autoPublishMinScore)
+          // Option 2: Auto-approve all pending (autoApproveEnabled + score >= minRelevanceScore)
+          const shouldAutoQueue = !analysis.shouldReject && (
+            (config.autoPublishEnabled && analysis.relevance >= (config.autoPublishMinScore || 9)) ||
+            (config.autoApproveEnabled && analysis.relevance >= config.minRelevanceScore)
+          );
 
           const finalStatus = analysis.shouldReject ? 'rejected' : (shouldAutoQueue ? 'approved' : 'pending');
 

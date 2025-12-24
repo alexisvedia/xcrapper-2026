@@ -36,6 +36,7 @@ const defaultConfig: AppConfig = {
   targetLanguage: 'es',
   autoPublishEnabled: false,
   autoPublishMinScore: 9,
+  autoApproveEnabled: false,
   nextPublishTime: null,
   aiSystemPrompt: `You are a senior AI and cutting-edge technology news editor. Evaluate tweets and create professional journalistic versions.
 

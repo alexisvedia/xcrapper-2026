@@ -16,6 +16,7 @@ export function InboxView() {
     showToast,
     approveTweet,
     config,
+    updateConfig,
     isScrapingActive,
     lastScrapeTime,
     setLastScrapeTime,
@@ -291,7 +292,30 @@ export function InboxView() {
       <header className="pl-14 md:pl-6 pr-4 md:pr-6 py-4 md:py-5 border-b border-[var(--border)]">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="min-w-0 flex-1">
-            <h1 className="text-base md:text-lg font-medium text-[var(--text-primary)]">Inbox</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-base md:text-lg font-medium text-[var(--text-primary)]">Inbox</h1>
+              {/* Auto-approve toggle */}
+              <button
+                onClick={() => updateConfig({ autoApproveEnabled: !config.autoApproveEnabled })}
+                className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] md:text-xs font-medium transition-colors ${
+                  config.autoApproveEnabled
+                    ? 'bg-[var(--green)] text-white'
+                    : 'bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+                }`}
+                title="Cuando está activo, los tweets pendientes van directamente a la cola"
+              >
+                <div className={`w-3 h-3 md:w-3.5 md:h-3.5 rounded-full border-2 transition-colors ${
+                  config.autoApproveEnabled
+                    ? 'bg-white border-white'
+                    : 'border-[var(--text-muted)]'
+                }`}>
+                  {config.autoApproveEnabled && (
+                    <CheckCircle2 className="w-full h-full text-[var(--green)]" />
+                  )}
+                </div>
+                <span className="hidden md:inline">Auto aprobar</span>
+              </button>
+            </div>
             <p className="text-[11px] md:text-sm text-[var(--text-secondary)] mt-0.5">
               {pendingCount} pendientes · {rejectedCount} rechazados
               {isScrapingActive && countdown && (

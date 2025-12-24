@@ -88,6 +88,7 @@ export interface AppConfig {
   targetLanguage: string;
   autoPublishEnabled: boolean;
   autoPublishMinScore: number;
+  autoApproveEnabled: boolean; // Auto-approve tweets with score >= minRelevanceScore
   nextPublishTime: string | null; // ISO string for Supabase sync
   aiSystemPrompt: string;
   rejectedPatterns: string[];
