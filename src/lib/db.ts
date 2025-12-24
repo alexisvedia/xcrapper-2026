@@ -17,6 +17,7 @@ function dbToAppTweet(db: DbScrapedTweet): ScrapedTweet {
     aiModel: (db as DbScrapedTweet & { ai_model?: string }).ai_model || undefined,
     media: (db as DbScrapedTweet & { media?: ScrapedTweet['media'] }).media || undefined,
     rejectionReason: db.rejection_reason || undefined,
+    approvalReason: db.approval_reason || undefined,
     scrapedAt: new Date(db.scraped_at),
     status: db.status,
     isBreakingNews: (db as DbScrapedTweet & { is_breaking_news?: boolean }).is_breaking_news || undefined,
@@ -38,6 +39,7 @@ function appToDbTweet(tweet: ScrapedTweet): Partial<DbScrapedTweet> {
     relevance_score: tweet.relevanceScore,
     ai_summary: tweet.aiSummary || null,
     rejection_reason: tweet.rejectionReason || null,
+    approval_reason: tweet.approvalReason || null,
     status: tweet.status,
   };
 }
@@ -61,11 +63,15 @@ export async function fetchTweets(): Promise<ScrapedTweet[]> {
 export async function updateTweetStatus(
   id: string,
   status: ScrapedTweet['status'],
-  rejectionReason?: string
+  reason?: string
 ): Promise<boolean> {
   const updates: Partial<DbScrapedTweet> = { status };
-  if (rejectionReason) {
-    updates.rejection_reason = rejectionReason;
+  if (reason) {
+    if (status === 'rejected') {
+      updates.rejection_reason = reason;
+    } else if (status === 'approved') {
+      updates.approval_reason = reason;
+    }
   }
 
   const { error } = await supabase

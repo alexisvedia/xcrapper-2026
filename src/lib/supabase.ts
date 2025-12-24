@@ -18,6 +18,7 @@ export interface DbScrapedTweet {
   relevance_score: number;
   ai_summary: string | null;
   rejection_reason: string | null;
+  approval_reason: string | null;
   scraped_at: string;
   status: 'pending' | 'approved' | 'rejected' | 'published';
 }

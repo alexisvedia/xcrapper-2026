@@ -151,7 +151,7 @@ interface AppState {
   tweets: ScrapedTweet[];
   setTweets: (tweets: ScrapedTweet[]) => void;
   refreshTweets: () => Promise<void>;
-  approveTweet: (id: string) => Promise<void>;
+  approveTweet: (id: string, reason?: string) => Promise<void>;
   rejectTweet: (id: string, reason?: string) => Promise<void>;
   updateTweetContent: (id: string, content: string) => Promise<void>;
   deleteTweets: (ids: string[]) => Promise<void>;
@@ -314,18 +314,18 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ tweets });
   },
 
-  approveTweet: async (id) => {
+  approveTweet: async (id, reason) => {
     const tweet = get().tweets.find((t) => t.id === id);
     if (!tweet) return;
 
     // Optimistic update
     set((state) => ({
       tweets: state.tweets.map((t) =>
-        t.id === id ? { ...t, status: 'approved' as const } : t
+        t.id === id ? { ...t, status: 'approved' as const, approvalReason: reason } : t
       ),
     }));
 
-    const success = await db.updateTweetStatus(id, 'approved');
+    const success = await db.updateTweetStatus(id, 'approved', reason);
     if (success) {
       await get().addToQueue({ ...tweet, status: 'approved' });
       get().showToast('Tweet aprobado y añadido a la cola', 'success');

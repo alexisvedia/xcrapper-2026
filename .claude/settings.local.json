@@ -31,7 +31,10 @@
       "Bash(npm view:*)",
       "Bash(timeout 60 npx tsc:*)",
       "Bash(timeout 20 bash:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Skill(gemini-manager)",
+      "Bash(gemini \"TASK: Implement swipe gestures for TweetCard.tsx\n\nFILE: C:\\\\Users\\\\AxSRockS\\\\Documents\\\\Repositorios\\\\xcrapper-2026\\\\src\\\\components\\\\TweetCard.tsx\n\nREQUIREMENTS:\n1. Add swipe-to-approve \\(swipe right\\) and swipe-to-reject \\(swipe left\\) for pending tweets only\n2. Only enable swipe on mobile - wrap the mobile card section in a swipeable motion.div\n3. Use motion/react library \\(already imported\\) with drag=''x'' and dragConstraints\n4. Show visual indicators during swipe:\n   - Swipe right: green background \\(#50e3c2\\) with Check icon appearing\n   - Swipe left: red background \\(#ff6b6b\\) with X icon appearing\n5. On dragEnd with offset > 100px:\n   - Right swipe \\(x > 100\\): call approveTweet\\(tweet.id\\)\n   - Left swipe \\(x < -100\\): call rejectTweet\\(tweet.id, ''Rechazado manualmente''\\)\n6. Add haptic feedback: navigator.vibrate?.\\(50\\) on swipe action\n7. Use useMotionValue and useTransform from motion/react for smooth indicator opacity\n\nCURRENT IMPORTS TO USE:\n- motion, AnimatePresence from ''motion/react''\n- Check, X from ''lucide-react''\n- approveTweet, rejectTweet from useAppStore\n\nIMPLEMENTATION APPROACH:\n- Add useState for dragX to track swipe direction\n- Use useMotionValue for x position\n- Use useTransform to derive background color and icon opacity\n- Wrap the mobile card content \\(md:hidden section\\) in a motion.div with drag=''x''\n- Add absolute positioned indicator divs behind the card that show during swipe\n- The swipeable wrapper should only appear for pending tweets\n\nApply changes now. Do not ask questions.\" --yolo -o text)",
+      "Bash(gemini:*)"
     ]
   }
 }

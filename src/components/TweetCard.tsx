@@ -18,7 +18,10 @@ export function TweetCard({ tweet, index }: TweetCardProps) {
   const [editedContent, setEditedContent] = useState(tweet.processedContent);
   const [expandedMedia, setExpandedMedia] = useState<{ url: string; type: string } | null>(null);
   const [showOriginal, setShowOriginal] = useState(false);
+  const [reasonModal, setReasonModal] = useState<{ type: 'reject' | 'approve'; isOpen: boolean }>({ type: 'reject', isOpen: false });
+  const [reason, setReason] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const reasonInputRef = useRef<HTMLTextAreaElement>(null);
 
   // Swipe logic
   const x = useMotionValue(0);
@@ -59,6 +62,38 @@ export function TweetCard({ tweet, index }: TweetCardProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') handleCancel();
     else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSave();
+  };
+
+  // Reason modal handlers
+  const openRejectModal = () => {
+    setReason('');
+    setReasonModal({ type: 'reject', isOpen: true });
+    setTimeout(() => reasonInputRef.current?.focus(), 100);
+  };
+
+  const openApproveModal = () => {
+    setReason('');
+    setReasonModal({ type: 'approve', isOpen: true });
+    setTimeout(() => reasonInputRef.current?.focus(), 100);
+  };
+
+  const handleReasonSubmit = () => {
+    if (reasonModal.type === 'reject') {
+      rejectTweet(tweet.id, reason || 'Sin razón especificada');
+    } else {
+      approveTweet(tweet.id, reason || undefined);
+    }
+    setReasonModal({ type: 'reject', isOpen: false });
+    setReason('');
+  };
+
+  const handleReasonKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setReasonModal({ type: 'reject', isOpen: false });
+      setReason('');
+    } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      handleReasonSubmit();
+    }
   };
 
   const getScoreColor = (score: number) => {
@@ -331,7 +366,7 @@ export function TweetCard({ tweet, index }: TweetCardProps) {
       {tweet.status === 'pending' && (
         <div className="flex items-center gap-2 px-3 md:px-4 py-3 border-t border-[var(--border)]">
           <button
-            onClick={() => rejectTweet(tweet.id, 'Rechazado manualmente')}
+            onClick={openRejectModal}
             className="flex-1 md:flex-none btn btn-reject text-sm py-2.5 min-h-[44px]"
           >
             <X className="w-4 h-4" />
@@ -347,12 +382,90 @@ export function TweetCard({ tweet, index }: TweetCardProps) {
         </div>
       )}
 
+      {/* Actions for rejected tweets - can approve with reason */}
+      {tweet.status === 'rejected' && (
+        <div className="flex items-center gap-2 px-3 md:px-4 py-3 border-t border-[var(--border)]">
+          <button
+            onClick={openApproveModal}
+            className="flex-1 md:flex-none btn btn-approve text-sm py-2.5 min-h-[44px]"
+          >
+            <Check className="w-4 h-4" />
+            <span className="ml-1">Aprobar (indicar por qué)</span>
+          </button>
+        </div>
+      )}
+
       {/* Rejection reason */}
       {tweet.status === 'rejected' && tweet.rejectionReason && (
         <div className="px-4 py-2 border-t border-[var(--border)] bg-[var(--red-dim)]">
-          <p className="text-xs text-[var(--red)]">{tweet.rejectionReason}</p>
+          <p className="text-xs text-[var(--red)]">Rechazado: {tweet.rejectionReason}</p>
         </div>
       )}
+
+      {/* Approval reason (for previously rejected tweets) */}
+      {tweet.status === 'approved' && tweet.approvalReason && (
+        <div className="px-4 py-2 border-t border-[var(--border)] bg-[var(--green-dim)]">
+          <p className="text-xs text-[var(--green)]">Aprobado: {tweet.approvalReason}</p>
+        </div>
+      )}
+
+      {/* Reason Modal */}
+      <AnimatePresence>
+        {reasonModal.isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setReasonModal({ type: 'reject', isOpen: false })}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg overflow-hidden"
+            >
+              <div className="px-4 py-3 border-b border-[var(--border)]">
+                <h3 className="text-sm font-medium text-[var(--text-primary)]">
+                  {reasonModal.type === 'reject' ? '¿Por qué rechazas este tweet?' : '¿Por qué apruebas este tweet?'}
+                </h3>
+                <p className="text-xs text-[var(--text-muted)] mt-1">
+                  Esta info ayudará a mejorar el prompt del AI
+                </p>
+              </div>
+              <div className="p-4">
+                <textarea
+                  ref={reasonInputRef}
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  onKeyDown={handleReasonKeyDown}
+                  placeholder={reasonModal.type === 'reject'
+                    ? "Ej: No es noticia, es opinión personal..."
+                    : "Ej: El AI lo rechazó pero es relevante porque..."
+                  }
+                  className="textarea text-sm w-full"
+                  rows={3}
+                />
+              </div>
+              <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-[var(--border)] bg-[var(--bg-secondary)]">
+                <button
+                  onClick={() => setReasonModal({ type: 'reject', isOpen: false })}
+                  className="btn btn-ghost text-xs"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleReasonSubmit}
+                  className={`btn text-xs ${reasonModal.type === 'reject' ? 'btn-reject' : 'btn-approve'}`}
+                >
+                  {reasonModal.type === 'reject' ? 'Rechazar' : 'Aprobar'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Media Lightbox */}
       <AnimatePresence>

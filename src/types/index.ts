@@ -23,6 +23,7 @@ export interface ScrapedTweet {
   scrapedAt: Date;
   status: TweetStatus;
   rejectionReason?: string;
+  approvalReason?: string; // Why a rejected tweet was approved (for prompt improvement)
   isBreakingNews?: boolean;
 }
 
