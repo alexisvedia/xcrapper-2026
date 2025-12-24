@@ -299,20 +299,14 @@ export function InboxView() {
                 onClick={() => updateConfig({ autoApproveEnabled: !config.autoApproveEnabled })}
                 className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] md:text-xs font-medium transition-colors ${
                   config.autoApproveEnabled
-                    ? 'bg-[var(--green)] text-white'
+                    ? 'bg-[var(--green-dim)] text-[var(--green)]'
                     : 'bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
                 }`}
                 title="Cuando está activo, los tweets pendientes van directamente a la cola"
               >
-                <div className={`w-3 h-3 md:w-3.5 md:h-3.5 rounded-full border-2 transition-colors ${
-                  config.autoApproveEnabled
-                    ? 'bg-white border-white'
-                    : 'border-[var(--text-muted)]'
-                }`}>
-                  {config.autoApproveEnabled && (
-                    <CheckCircle2 className="w-full h-full text-[var(--green)]" />
-                  )}
-                </div>
+                <CheckCircle2 className={`w-3 h-3 md:w-3.5 md:h-3.5 transition-colors ${
+                  config.autoApproveEnabled ? 'text-[var(--green)]' : 'text-[var(--text-muted)]'
+                }`} />
                 <span className="hidden md:inline">Auto aprobar</span>
               </button>
             </div>
@@ -533,49 +527,30 @@ export function InboxView() {
 
         {/* Filter - Tabs */}
         {!scrapeProgress && (
-          <div className="flex flex-col gap-2 relative">
-            <div className="flex justify-center -ml-5 md:ml-0">
-              <div className="tabs">
-                <button
-                  onClick={() => setActiveFilter('all')}
-                  className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'all' ? 'active' : ''}`}
-                  title="Todos los tweets scrapeados"
-                >
-                  Todos ({allCount})
-                </button>
-                <button
-                  onClick={() => setActiveFilter('pending')}
-                  className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'pending' ? 'active' : ''}`}
-                  title={`Tweets con score >= ${minScore}`}
-                >
-                  Pendientes ({pendingCount})
-                </button>
-                <button
-                  onClick={() => setActiveFilter('rejected')}
-                  className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'rejected' ? 'active' : ''}`}
-                  title={`Tweets con score < ${minScore} o rechazados`}
-                >
-                  Rechazados ({rejectedCount})
-                </button>
-              </div>
+          <div className="flex justify-center -ml-5 md:ml-0">
+            <div className="tabs">
+              <button
+                onClick={() => setActiveFilter('all')}
+                className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'all' ? 'active' : ''}`}
+                title="Todos los tweets scrapeados"
+              >
+                Todos ({allCount})
+              </button>
+              <button
+                onClick={() => setActiveFilter('pending')}
+                className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'pending' ? 'active' : ''}`}
+                title={`Tweets con score >= ${minScore}`}
+              >
+                Pendientes ({pendingCount})
+              </button>
+              <button
+                onClick={() => setActiveFilter('rejected')}
+                className={`tab whitespace-nowrap text-xs md:text-sm ${activeFilter === 'rejected' ? 'active' : ''}`}
+                title={`Tweets con score < ${minScore} o rechazados`}
+              >
+                Rechazados ({rejectedCount})
+              </button>
             </div>
-            {/* Auto-approve button - only show in Pendientes tab */}
-            {activeFilter === 'pending' && pendingCount > 0 && (
-              <div className="flex justify-center">
-                <button
-                  onClick={handleApproveAll}
-                  disabled={isApprovingAll}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--green-dim)] text-[var(--green)] hover:bg-[var(--green)] hover:text-white transition-colors disabled:opacity-50"
-                >
-                  {isApprovingAll ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                  )}
-                  Auto aprobar ({pendingCount})
-                </button>
-              </div>
-            )}
           </div>
         )}
       </header>
