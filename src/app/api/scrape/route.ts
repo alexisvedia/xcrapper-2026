@@ -137,9 +137,18 @@ export async function POST(request: Request) {
         console.log(`[Cleanup] Deleted ${cleanupResult.deleted} old tweets`);
       }
 
-      await sendEvent({ type: 'status', message: 'Obteniendo timeline de Twitter...' });
+      await sendEvent({ type: 'status', message: `Obteniendo ${count} tweets de Twitter...` });
 
       const allTweets = await fetchHomeTimeline(count);
+      const fetchedCount = allTweets.length;
+
+      // Notify how many were actually fetched from Twitter
+      if (fetchedCount < count) {
+        await sendEvent({
+          type: 'status',
+          message: `Twitter devolvió ${fetchedCount} de ${count} solicitados`
+        });
+      }
 
       // Filter tweets by age (maxTweetAgeDays)
       const maxAgeDays = config.maxTweetAgeDays || 2;
@@ -154,10 +163,27 @@ export async function POST(request: Request) {
       const filteredOut = allTweets.length - tweets.length;
       const total = tweets.length;
 
+      // Build detailed message
+      let startMessage = `Procesando ${total} tweets`;
+      const details: string[] = [];
+
+      if (fetchedCount < count) {
+        details.push(`Twitter: ${fetchedCount}/${count}`);
+      }
+      if (filteredOut > 0) {
+        details.push(`-${filteredOut} antiguos`);
+      }
+      if (details.length > 0) {
+        startMessage += ` (${details.join(', ')})`;
+      }
+
       await sendEvent({
         type: 'start',
         total,
-        message: `Encontrados ${total} tweets recientes (${filteredOut} descartados por antigüedad)`,
+        requested: count,
+        fetched: fetchedCount,
+        filteredByAge: filteredOut,
+        message: startMessage,
       });
 
       // Get existing content for similarity check

@@ -11,6 +11,10 @@ export interface ScrapeProgress {
   author?: string;
   status?: string;
   isBreakingNews?: boolean;
+  // New fields for better transparency
+  requested?: number;      // How many tweets were requested
+  fetched?: number;        // How many Twitter returned
+  filteredByAge?: number;  // How many were filtered by age
   results?: {
     processed: number;
     approved: number;
@@ -411,8 +415,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     const tweets = get().tweets;
     const queue = get().queue;
 
-    // Get all pending and approved tweets
-    const tweetsToClear = tweets.filter(t => t.status === 'pending' || t.status === 'approved');
+    // Get all non-published tweets (pending, approved, AND rejected)
+    const tweetsToClear = tweets.filter(t => t.status !== 'published');
 
     if (tweetsToClear.length === 0) {
       get().showToast('No hay tweets para limpiar', 'info');
@@ -422,14 +426,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     const oldTweets = [...tweets];
     const oldQueue = [...queue];
 
-    // Optimistic update - mark as rejected in UI
+    // Optimistic update - remove from UI (we'll delete from DB)
     set((state) => ({
-      tweets: state.tweets.map((t) =>
-        t.status === 'pending' || t.status === 'approved'
-          ? { ...t, status: 'rejected' as const, rejectionReason: 'Limpiado manualmente' }
-          : t
-      ),
-      // Also remove from queue
+      tweets: state.tweets.filter((t) => t.status === 'published'),
+      // Also clear the queue
       queue: state.queue.filter((item) => {
         const tweet = tweetsToClear.find(t => t.id === item.scrapedTweetId);
         return !tweet;

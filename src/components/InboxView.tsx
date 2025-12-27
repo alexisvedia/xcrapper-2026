@@ -188,6 +188,9 @@ export function InboxView() {
                   current: 0,
                   total: data.total,
                   message: data.message,
+                  requested: data.requested,
+                  fetched: data.fetched,
+                  filteredByAge: data.filteredByAge,
                 });
               } else if (data.type === 'processing' || data.type === 'progress') {
                 setScrapeProgress({
@@ -289,14 +292,15 @@ export function InboxView() {
   };
 
   const handleClearAll = async () => {
-    const toClearCount = tweets.filter(t => t.status === 'pending' || t.status === 'approved').length;
+    // Count all non-published tweets (pending, approved, rejected)
+    const toClearCount = tweets.filter(t => t.status !== 'published').length;
     if (toClearCount === 0) {
       showToast('No hay tweets para limpiar', 'info');
       return;
     }
 
     // Confirm before clearing
-    if (!window.confirm(`¿Limpiar ${toClearCount} tweets? Se marcarán como rechazados pero permanecerán en la base de datos para evitar duplicados.`)) {
+    if (!window.confirm(`¿Limpiar ${toClearCount} tweets del inbox?\n\nSe eliminarán de la vista pero permanecerán en la base de datos para evitar duplicados en futuros scrapes.`)) {
       return;
     }
 
@@ -416,11 +420,29 @@ export function InboxView() {
                   animate={{ width: `${scrapeProgress.percent}%` }}
                 />
               </div>
+              {/* Fetch stats - show when there's a difference between requested and processed */}
+              {(scrapeProgress.requested || scrapeProgress.fetched || scrapeProgress.filteredByAge) && (
+                <div className="flex items-center gap-3 mt-2 text-[10px] text-[var(--text-muted)] bg-[var(--bg-secondary)] rounded px-2 py-1">
+                  {scrapeProgress.requested && (
+                    <span>Solicitados: <span className="text-[var(--text-secondary)]">{scrapeProgress.requested}</span></span>
+                  )}
+                  {scrapeProgress.fetched && scrapeProgress.fetched !== scrapeProgress.requested && (
+                    <span>Twitter devolvió: <span className="text-[var(--yellow)]">{scrapeProgress.fetched}</span></span>
+                  )}
+                  {scrapeProgress.filteredByAge && scrapeProgress.filteredByAge > 0 && (
+                    <span>Filtrados por antigüedad: <span className="text-[var(--text-muted)]">-{scrapeProgress.filteredByAge}</span></span>
+                  )}
+                  <span>A procesar: <span className="text-[var(--accent)]">{scrapeProgress.total}</span></span>
+                </div>
+              )}
               {scrapeProgress.results && (
                 <div className="flex items-center gap-4 mt-2 text-xs text-[var(--text-muted)]">
                   <span className="text-[var(--green)]">{scrapeProgress.results.approved} aprobados</span>
                   <span className="text-[var(--red)]">{scrapeProgress.results.rejected} rechazados</span>
                   <span>{scrapeProgress.results.duplicates} duplicados</span>
+                  {scrapeProgress.results.similar > 0 && (
+                    <span className="text-[var(--yellow)]">{scrapeProgress.results.similar} similares</span>
+                  )}
                   {scrapeProgress.results.errors > 0 && (
                     <span className="text-[var(--red)]">{scrapeProgress.results.errors} errores</span>
                   )}
