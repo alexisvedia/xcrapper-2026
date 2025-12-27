@@ -2,7 +2,7 @@
 
 import { useAppStore } from '@/store';
 import { TweetCard } from './TweetCard';
-import { RefreshCw, Loader2, Square, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { RefreshCw, Loader2, Square, ChevronDown, CheckCircle2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 
@@ -15,6 +15,7 @@ export function InboxView() {
     refreshQueue,
     showToast,
     approveTweet,
+    clearAllScrapedTweets,
     config,
     updateConfig,
     isScrapingActive,
@@ -32,6 +33,7 @@ export function InboxView() {
 
   const [activeFilter, setActiveFilter] = useState<FilterPreset>('pending');
   const [isApprovingAll, setIsApprovingAll] = useState(false);
+  const [isClearingAll, setIsClearingAll] = useState(false);
   const [countdown, setCountdown] = useState<string>('');
   const [showLog, setShowLog] = useState(true); // Default to showing log
   const autoScrapeTriggeredRef = useRef(false);
@@ -286,6 +288,23 @@ export function InboxView() {
     setIsApprovingAll(false);
   };
 
+  const handleClearAll = async () => {
+    const toClearCount = tweets.filter(t => t.status === 'pending' || t.status === 'approved').length;
+    if (toClearCount === 0) {
+      showToast('No hay tweets para limpiar', 'info');
+      return;
+    }
+
+    // Confirm before clearing
+    if (!window.confirm(`¿Limpiar ${toClearCount} tweets? Se marcarán como rechazados pero permanecerán en la base de datos para evitar duplicados.`)) {
+      return;
+    }
+
+    setIsClearingAll(true);
+    await clearAllScrapedTweets();
+    setIsClearingAll(false);
+  };
+
   return (
     <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[var(--bg-primary)]">
       {/* Header */}
@@ -308,6 +327,20 @@ export function InboxView() {
                   config.autoApproveEnabled ? 'text-[var(--green)]' : 'text-[var(--text-muted)]'
                 }`} />
                 <span className="hidden md:inline">Auto aprobar</span>
+              </button>
+              {/* Clear all button */}
+              <button
+                onClick={handleClearAll}
+                disabled={isClearingAll || isScrapingLoading || allCount === 0}
+                className="flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] md:text-xs font-medium transition-colors bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-[var(--red)] hover:bg-[var(--red-dim)] disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Limpiar todos los tweets scrapeados (se mantienen en DB para evitar duplicados)"
+              >
+                {isClearingAll ? (
+                  <Loader2 className="w-3 h-3 md:w-3.5 md:h-3.5 spinner" />
+                ) : (
+                  <Trash2 className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                )}
+                <span className="hidden md:inline">Limpiar</span>
               </button>
             </div>
             <p className="text-[11px] md:text-sm text-[var(--text-secondary)] mt-0.5">

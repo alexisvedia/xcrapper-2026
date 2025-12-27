@@ -156,6 +156,7 @@ interface AppState {
   rejectTweet: (id: string, reason?: string) => Promise<void>;
   updateTweetContent: (id: string, content: string) => Promise<void>;
   deleteTweets: (ids: string[]) => Promise<void>;
+  clearAllScrapedTweets: () => Promise<void>;
 
   // Queue
   queue: QueueItem[];
@@ -403,6 +404,60 @@ export const useAppStore = create<AppState>((set, get) => ({
       // Rollback
       set({ tweets: oldTweets });
       get().showToast('Error al eliminar tweets', 'error');
+    }
+  },
+
+  clearAllScrapedTweets: async () => {
+    const tweets = get().tweets;
+    const queue = get().queue;
+
+    // Get all pending and approved tweets
+    const tweetsToClear = tweets.filter(t => t.status === 'pending' || t.status === 'approved');
+
+    if (tweetsToClear.length === 0) {
+      get().showToast('No hay tweets para limpiar', 'info');
+      return;
+    }
+
+    const oldTweets = [...tweets];
+    const oldQueue = [...queue];
+
+    // Optimistic update - mark as rejected in UI
+    set((state) => ({
+      tweets: state.tweets.map((t) =>
+        t.status === 'pending' || t.status === 'approved'
+          ? { ...t, status: 'rejected' as const, rejectionReason: 'Limpiado manualmente' }
+          : t
+      ),
+      // Also remove from queue
+      queue: state.queue.filter((item) => {
+        const tweet = tweetsToClear.find(t => t.id === item.scrapedTweetId);
+        return !tweet;
+      }),
+    }));
+
+    // Update all tweets to rejected status in DB
+    let successCount = 0;
+    for (const tweet of tweetsToClear) {
+      const success = await db.updateTweetStatus(tweet.id, 'rejected', 'Limpiado manualmente');
+      if (success) successCount++;
+    }
+
+    // Remove cleared tweets from queue in DB
+    const clearedIds = tweetsToClear.map(t => t.id);
+    const queueItemsToRemove = oldQueue.filter(item => clearedIds.includes(item.scrapedTweetId));
+    for (const item of queueItemsToRemove) {
+      await db.removeFromQueue(item.id);
+    }
+
+    if (successCount === tweetsToClear.length) {
+      get().showToast(`${successCount} tweets limpiados`, 'success');
+    } else if (successCount > 0) {
+      get().showToast(`${successCount}/${tweetsToClear.length} tweets limpiados`, 'info');
+    } else {
+      // Rollback
+      set({ tweets: oldTweets, queue: oldQueue });
+      get().showToast('Error al limpiar tweets', 'error');
     }
   },
 
