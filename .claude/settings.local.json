@@ -55,7 +55,9 @@
       "mcp__chrome-devtools__take_snapshot",
       "mcp__chrome-devtools__take_screenshot",
       "Bash(powershell:*)",
-      "mcp__chrome-devtools__evaluate_script"
+      "mcp__chrome-devtools__evaluate_script",
+      "mcp__chrome-devtools__click",
+      "mcp__firecrawl-mcp__firecrawl_scrape"
     ]
   }
 }

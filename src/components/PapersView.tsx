@@ -5,17 +5,16 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/store';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { 
-  Newspaper, 
-  Sun, 
-  Moon, 
-  Calendar, 
-  ChevronRight, 
-  ExternalLink, 
-  ThumbsUp, 
+import {
+  Newspaper,
+  Sun,
+  Moon,
+  Calendar,
+  ChevronRight,
+  ExternalLink,
+  ThumbsUp,
   X,
-  Share2,
-  Clock,
+  RefreshCw,
   Building2
 } from 'lucide-react';
 import { Paper } from '@/types';
@@ -70,13 +69,23 @@ export function PapersView() {
           </div>
         </div>
 
-        <button 
-          onClick={toggleTheme}
-          className="p-2 rounded-full hover:bg-[var(--bg-secondary)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-          aria-label="Toggle theme"
-        >
-          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => fetchPapers(papersDate)}
+            disabled={papersLoading}
+            className="p-2 rounded-full hover:bg-[var(--bg-secondary)] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors disabled:opacity-50"
+            aria-label="Actualizar papers"
+          >
+            <RefreshCw size={18} className={papersLoading ? 'animate-spin' : ''} />
+          </button>
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full hover:bg-[var(--bg-secondary)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+        </div>
       </header>
 
       {/* Content */}
