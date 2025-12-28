@@ -36,17 +36,17 @@ export function Sidebar() {
   } = useAppStore();
 
   const [lastScrapeText, setLastScrapeText] = useState("Nunca");
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("sidebarCollapsed");
+      return saved === "true";
+    }
+    return false;
+  });
 
   const pendingCount = tweets.filter((t) => t.status === "pending").length;
   const queueCount = queue.length;
   const publishedCount = tweets.filter((t) => t.status === "published").length;
-
-  // Load collapsed state from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("sidebarCollapsed");
-    if (saved) setCollapsed(saved === "true");
-  }, []);
 
   // Save collapsed state
   useEffect(() => {

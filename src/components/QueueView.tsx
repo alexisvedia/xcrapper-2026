@@ -2,7 +2,7 @@
 
 import { useAppStore } from '@/store';
 import { QueueItem } from '@/types';
-import { ListOrdered, GripVertical, Trash2, Clock, Send, Calendar, Loader2, Image as ImageIcon, Film, Play, Timer, ExternalLink, PlayCircle, StopCircle, X } from 'lucide-react';
+import { ListOrdered, GripVertical, Trash2, Clock, Send, Calendar, Loader2, Image as ImageIcon, Play, Timer, ExternalLink, PlayCircle, StopCircle, X } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo, useDragControls } from 'motion/react';
 import {
   DndContext,
@@ -22,7 +22,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { format, addMinutes, differenceInSeconds } from 'date-fns';
+import { format, addMinutes } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useState, useEffect, useRef, useCallback } from 'react';
 
