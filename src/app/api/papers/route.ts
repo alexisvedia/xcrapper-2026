@@ -92,9 +92,15 @@ Tu tarea es generar 3 campos para cada paper en español latinoamericano:
 
 1. "titleEs": Título técnico traducido fielmente.
 2. "abstractEs": Abstract traducido manteniendo el rigor técnico.
-3. "hook": UN SOLO PÁRRAFO CORTO (1-2 oraciones) que explique qué hace el paper en lenguaje sencillo y atractivo, evitando jerga técnica compleja. Estilo "Noticia de tecnología". 
-   - Malo: "Proponemos una arquitectura transformer con atención dispersa..."
-   - Bueno: "Esta nueva IA reduce el costo de procesar videos largos ignorando la información repetitiva, haciéndolo 10 veces más rápido."
+3. "hook": MÁXIMO 15 PALABRAS. Describe el beneficio o resultado concreto, no el método.
+   PROHIBIDO empezar con: "Una nueva", "Un nuevo", "Nueva", "Nuevo", "Este paper", "Investigadores".
+   PROHIBIDO: jerga técnica, siglas sin explicar, frases genéricas.
+   BUENO: Empieza con verbo en acción o el beneficio directo.
+   - Malo: "Una nueva IA que mejora el razonamiento..."
+   - Malo: "Investigadores proponen un método para..."
+   - Bueno: "Reduce 10x el costo de procesar videos largos"
+   - Bueno: "Chatbots que entienden imágenes y texto al mismo tiempo"
+   - Bueno: "Entrena modelos de IA con 90% menos datos"
 
 Responde SOLO con un JSON array, sin markdown ni explicaciones.
 

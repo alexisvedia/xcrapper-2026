@@ -170,8 +170,8 @@ export function PapersView() {
                         <Newspaper size={48} className="text-[var(--text-muted)] opacity-20" />
                       </div>
                     )}
-                    <div className="absolute top-3 left-3 md:top-4 md:left-4">
-                      <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-[var(--accent)] text-[var(--bg-root)] font-bold font-sans text-base md:text-lg shadow-lg">
+                    <div className="absolute top-4 left-4 md:top-5 md:left-5">
+                      <div className="flex items-center justify-center w-9 h-9 md:w-11 md:h-11 rounded-full bg-[var(--accent)] text-[var(--bg-root)] font-bold font-sans text-lg md:text-xl shadow-lg">
                         1
                       </div>
                     </div>
