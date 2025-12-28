@@ -12,6 +12,7 @@ import {
   Send,
   PanelLeftClose,
   PanelLeft,
+  Newspaper,
 } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -19,6 +20,7 @@ const navItems: { id: ViewType; label: string; icon: typeof Inbox }[] = [
   { id: "inbox", label: "Inbox", icon: Inbox },
   { id: "queue", label: "Cola", icon: ListOrdered },
   { id: "published", label: "Publicados", icon: CheckCircle },
+  { id: "papers", label: "Papers", icon: Newspaper },
   { id: "config", label: "Config", icon: Settings },
 ];
 

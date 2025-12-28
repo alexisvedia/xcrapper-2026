@@ -27,6 +27,8 @@ export function MobileHeader() {
         return "Cola";
       case "published":
         return "Publicados";
+      case "papers":
+        return "Papers";
       case "config":
         return "Config";
       default:

@@ -97,4 +97,22 @@ export interface AppConfig {
   scrapingEnabled: boolean;
 }
 
-export type ViewType = 'inbox' | 'queue' | 'published' | 'config';
+export type ViewType = 'inbox' | 'queue' | 'published' | 'config' | 'papers';
+
+export type Theme = 'dark' | 'light';
+
+export interface Paper {
+  id: string;
+  title: string;
+  titleEs: string;
+  abstract: string;
+  abstractEs: string;
+  authors: string[];
+  institution?: string;
+  arxivId?: string;
+  upvotes: number;
+  thumbnail?: string;
+  publishedAt: Date;
+  fetchedAt: Date;
+  url: string;
+}

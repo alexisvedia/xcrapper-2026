@@ -7,3 +7,4 @@ export { PublishedView } from './PublishedView';
 export { Toast } from './Toast';
 export { BottomNav } from './BottomNav';
 export { MobileHeader } from './MobileHeader';
+export { PapersView } from './PapersView';

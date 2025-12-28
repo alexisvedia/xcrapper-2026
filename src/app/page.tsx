@@ -7,6 +7,7 @@ import {
   QueueView,
   ConfigView,
   PublishedView,
+  PapersView,
   Toast,
   BottomNav,
   MobileHeader,
@@ -75,6 +76,8 @@ export default function Home() {
         return <PublishedView />;
       case "config":
         return <ConfigView />;
+      case "papers":
+        return <PapersView />;
       default:
         return <InboxView />;
     }

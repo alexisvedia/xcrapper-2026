@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { ScrapedTweet, QueueItem, AppConfig, ViewType } from '@/types';
+import { ScrapedTweet, QueueItem, AppConfig, ViewType, Theme, Paper } from '@/types';
 import * as db from '@/lib/db';
 
 // Scraping progress interface (used globally)
@@ -231,6 +231,22 @@ interface AppState {
   // Editing state
   editingTweetId: string | null;
   setEditingTweetId: (id: string | null) => void;
+
+  // Theme
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
+
+  // Papers
+  papers: Paper[];
+  selectedPaper: Paper | null;
+  papersLoading: boolean;
+  papersDate: string; // YYYY-MM-DD format
+  setPapers: (papers: Paper[]) => void;
+  setSelectedPaper: (paper: Paper | null) => void;
+  setPapersLoading: (loading: boolean) => void;
+  setPapersDate: (date: string) => void;
+  fetchPapers: (date?: string) => Promise<void>;
 }
 
 // LocalStorage helpers for persistence (view only, auto-publish syncs via Supabase)
@@ -241,7 +257,7 @@ const STORAGE_KEYS = {
 const getStoredView = (): ViewType => {
   if (typeof window === 'undefined') return 'inbox';
   const stored = localStorage.getItem(STORAGE_KEYS.currentView);
-  if (stored && ['inbox', 'queue', 'published', 'config'].includes(stored)) {
+  if (stored && ['inbox', 'queue', 'published', 'config', 'papers'].includes(stored)) {
     return stored as ViewType;
   }
   return 'inbox';
@@ -629,4 +645,48 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Editing state
   editingTweetId: null,
   setEditingTweetId: (id) => set({ editingTweetId: id }),
+
+  // Theme
+  theme: (() => {
+    if (typeof window === 'undefined') return 'dark';
+    const stored = localStorage.getItem('xcrapper_theme');
+    return (stored === 'light' ? 'light' : 'dark') as Theme;
+  })(),
+  setTheme: (theme) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('xcrapper_theme', theme);
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+    set({ theme });
+  },
+  toggleTheme: () => {
+    const current = get().theme;
+    const next = current === 'dark' ? 'light' : 'dark';
+    get().setTheme(next);
+  },
+
+  // Papers
+  papers: [],
+  selectedPaper: null,
+  papersLoading: false,
+  papersDate: new Date().toISOString().split('T')[0],
+  setPapers: (papers) => set({ papers }),
+  setSelectedPaper: (paper) => set({ selectedPaper: paper }),
+  setPapersLoading: (loading) => set({ papersLoading: loading }),
+  setPapersDate: (date) => set({ papersDate: date }),
+  fetchPapers: async (date) => {
+    const targetDate = date || get().papersDate;
+    set({ papersLoading: true, papersDate: targetDate });
+
+    try {
+      const response = await fetch(`/api/papers?date=${targetDate}`);
+      if (!response.ok) throw new Error('Failed to fetch papers');
+      const data = await response.json();
+      set({ papers: data.papers || [], papersLoading: false });
+    } catch (error) {
+      console.error('Error fetching papers:', error);
+      set({ papers: [], papersLoading: false });
+      get().showToast('Error al cargar papers', 'error');
+    }
+  },
 }));
