@@ -142,7 +142,7 @@ export function ConfigView() {
   const { config, updateConfig, isScrapingActive, setScrapingActive } = useAppStore();
 
   return (
-    <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[var(--bg-primary)]">
+    <div className="flex-1 flex flex-col h-full overflow-hidden bg-[var(--bg-primary)]">
       {/* Header */}
       <header className="pl-14 md:pl-6 pr-4 md:pr-6 py-4 border-b border-[var(--border)] bg-[var(--bg-primary)]">
         <h1 className="text-base md:text-xl font-semibold flex items-center gap-2">

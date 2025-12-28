@@ -37,7 +37,25 @@
       "Bash(gemini:*)",
       "Bash(node scripts/query-rejections.mjs:*)",
       "Bash(node scripts/update-prompt.mjs:*)",
-      "Bash(node scripts/verify-prompt.mjs:*)"
+      "Bash(node scripts/verify-prompt.mjs:*)",
+      "Bash(bash:*)",
+      "Bash(where tmux:*)",
+      "Bash(wsl --list:*)",
+      "Bash(echo:*)",
+      "Bash(npx:*)",
+      "Bash(ping:*)",
+      "mcp__chrome-devtools__list_pages",
+      "mcp__chrome-devtools__navigate_page",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "mcp__chrome-devtools__resize_page",
+      "Bash(taskkill:*)",
+      "Bash(powershell -Command \"Stop-Process -Id 17180 -Force\")",
+      "Bash(powershell -Command \"Start-Sleep -Seconds 5\")",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__chrome-devtools__take_screenshot",
+      "Bash(powershell:*)",
+      "mcp__chrome-devtools__evaluate_script"
     ]
   }
 }

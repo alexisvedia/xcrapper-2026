@@ -310,7 +310,7 @@ export function InboxView() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[var(--bg-primary)]">
+    <div className="flex-1 flex flex-col h-full overflow-hidden bg-[var(--bg-primary)]">
       {/* Header */}
       <header className="pl-14 md:pl-6 pr-4 md:pr-6 py-4 md:py-5 border-b border-[var(--border)]">
         <div className="flex items-start justify-between gap-3 mb-4">
