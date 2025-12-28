@@ -8,6 +8,8 @@ import {
   ConfigView,
   PublishedView,
   Toast,
+  BottomNav,
+  MobileHeader,
 } from "@/components";
 import { useEffect } from "react";
 import { motion } from "motion/react";
@@ -197,8 +199,20 @@ export default function Home() {
 
   return (
     <main className="flex h-screen bg-[var(--bg-void)]">
+      {/* Mobile Header - only visible on mobile */}
+      <MobileHeader />
+
+      {/* Desktop Sidebar - hidden on mobile */}
       <Sidebar />
-      {renderView()}
+
+      {/* Main content area with mobile padding */}
+      <div className="flex-1 pt-14 pb-14 md:pt-0 md:pb-0">
+        {renderView()}
+      </div>
+
+      {/* Mobile Bottom Navigation - only visible on mobile */}
+      <BottomNav />
+
       <Toast />
     </main>
   );

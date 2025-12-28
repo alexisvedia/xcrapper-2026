@@ -8,15 +8,12 @@ import {
   ListOrdered,
   CheckCircle,
   Settings,
-  Radio,
   Power,
   Send,
   PanelLeftClose,
   PanelLeft,
-  Menu,
-  X,
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 
 const navItems: { id: ViewType; label: string; icon: typeof Inbox }[] = [
   { id: "inbox", label: "Inbox", icon: Inbox },
@@ -40,7 +37,6 @@ export function Sidebar() {
 
   const [lastScrapeText, setLastScrapeText] = useState("Nunca");
   const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   const pendingCount = tweets.filter((t) => t.status === "pending").length;
   const queueCount = queue.length;
@@ -56,14 +52,6 @@ export function Sidebar() {
   useEffect(() => {
     localStorage.setItem("sidebarCollapsed", String(collapsed));
   }, [collapsed]);
-
-  // Close mobile menu on view change
-  useEffect(() => {
-    if (mobileOpen) {
-      setMobileOpen(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentView]);
 
   const getCounts = (id: ViewType) => {
     switch (id) {
@@ -401,53 +389,12 @@ export function Sidebar() {
   );
 
   return (
-    <>
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)]"
-      >
-        <Menu className="w-5 h-5" />
-      </button>
-
-      {/* Desktop Sidebar */}
-      <aside
-        className={`hidden md:flex h-screen bg-[var(--bg-primary)] border-r border-[var(--border)] flex-col transition-all duration-300 ${
-          collapsed ? "w-[72px]" : "w-64"
-        }`}
-      >
-        {sidebarContent}
-      </aside>
-
-      {/* Mobile Sidebar Overlay */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMobileOpen(false)}
-              className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
-            />
-            <motion.aside
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="md:hidden fixed inset-y-0 left-0 z-50 w-72 bg-[var(--bg-primary)] border-r border-[var(--border)] flex flex-col"
-            >
-              <button
-                onClick={() => setMobileOpen(false)}
-                className="absolute top-4 right-4 p-2 rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-muted)]"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              {sidebarContent}
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-    </>
+    <aside
+      className={`hidden md:flex h-screen bg-[var(--bg-primary)] border-r border-[var(--border)] flex-col transition-all duration-300 ${
+        collapsed ? "w-[72px]" : "w-64"
+      }`}
+    >
+      {sidebarContent}
+    </aside>
   );
 }
