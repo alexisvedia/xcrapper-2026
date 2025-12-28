@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -13,19 +13,12 @@ async function generateArticle(paper: {
   authors: string[];
   arxivId?: string;
 }): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    throw new Error('GEMINI_API_KEY not configured');
+    throw new Error('GROQ_API_KEY not configured');
   }
 
-  const gemini = new GoogleGenerativeAI(apiKey);
-  const model = gemini.getGenerativeModel({
-    model: 'gemini-2.0-flash-exp',
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 2048,
-    },
-  });
+  const groq = new Groq({ apiKey });
 
   const prompt = `Eres un periodista científico experto en IA y tecnología. Tu trabajo es escribir artículos de divulgación científica que hagan accesible la investigación de vanguardia al público general hispanohablante.
 
@@ -58,8 +51,14 @@ FORMATO:
 
 Escribe el artículo ahora:`;
 
-  const result = await model.generateContent(prompt);
-  const article = result.response.text();
+  const result = await groq.chat.completions.create({
+    model: 'llama-3.3-70b-versatile',
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.7,
+    max_tokens: 2048,
+  });
+
+  const article = result.choices[0]?.message?.content || '';
 
   return article;
 }

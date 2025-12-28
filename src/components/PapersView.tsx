@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/store';
 import { format } from 'date-fns';
@@ -10,7 +10,6 @@ import {
   Sun,
   Moon,
   Calendar,
-  ChevronRight,
   ExternalLink,
   ThumbsUp,
   X,
@@ -155,11 +154,11 @@ export function PapersView() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
-                className="paper-hero-card p-0 overflow-hidden cursor-pointer group"
+                className="paper-hero-card p-0 overflow-hidden cursor-pointer group border-none md:border md:border-[var(--border)] bg-transparent md:bg-[var(--bg-primary)]"
                 onClick={() => setSelectedPaper(heroPaper)}
               >
                 <div className="grid md:grid-cols-2 gap-0">
-                  <div className="relative aspect-video md:aspect-auto overflow-hidden bg-[var(--bg-tertiary)]">
+                  <div className="relative aspect-video md:aspect-auto overflow-hidden bg-[var(--bg-tertiary)] md:rounded-l-lg">
                     {heroPaper.thumbnail ? (
                       <img 
                         src={heroPaper.thumbnail} 
@@ -172,33 +171,39 @@ export function PapersView() {
                       </div>
                     )}
                     <div className="absolute top-4 left-4">
-                      <span className="badge bg-[var(--accent)] text-[var(--bg-root)] font-bold shadow-lg">#1 Trending</span>
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[var(--accent)] text-[var(--bg-root)] font-bold font-sans text-lg shadow-lg">
+                        1
+                      </div>
                     </div>
                   </div>
-                  <div className="p-6 md:p-8 flex flex-col justify-center">
+                  <div className="pt-4 md:p-8 flex flex-col justify-center">
                     <div className="flex items-center gap-2 mb-3 paper-meta">
-                      <span className="uppercase tracking-wider text-[var(--accent)] font-bold text-xs">AI Research</span>
-                      <span>•</span>
-                      <span>{format(new Date(heroPaper.publishedAt), "d 'de' MMMM", { locale: es })}</span>
+                      <span className="uppercase tracking-widest text-[var(--accent)] font-bold text-xs md:text-sm">
+                        {heroPaper.authors[0]?.split(',')[0]}
+                      </span>
+                      <span className="text-[var(--border)]">•</span>
+                      <span className="font-sans font-medium text-[var(--text-muted)]">
+                        {format(new Date(heroPaper.publishedAt), "MMMM d", { locale: es })}
+                      </span>
                     </div>
                     
-                    <h2 className="paper-title paper-title-hero mb-4 group-hover:text-[var(--accent)] transition-colors">
+                    <h2 className="font-sans font-extrabold text-2xl md:text-4xl leading-[1.1] mb-4 text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
                       {heroPaper.titleEs || heroPaper.title}
                     </h2>
                     
-                    <p className="text-[var(--text-secondary)] leading-relaxed mb-6 line-clamp-3 md:line-clamp-4 text-sm md:text-base">
+                    <p className="text-[var(--text-secondary)] leading-relaxed mb-6 line-clamp-3 font-sans text-sm md:text-base opacity-90">
                       {heroPaper.abstractEs || heroPaper.abstract}
                     </p>
                     
                     <div className="mt-auto flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className="paper-author text-sm">{heroPaper.authors[0]}</span>
-                        {heroPaper.institution && (
-                          <span className="text-xs text-[var(--text-muted)]">{heroPaper.institution}</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[var(--text-muted)] bg-[var(--bg-tertiary)] px-2 py-1 rounded-md text-xs font-medium">
-                        <ThumbsUp size={12} />
+                      {heroPaper.institution && (
+                         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                            <Building2 size={12} />
+                            <span className="truncate max-w-[200px]">{heroPaper.institution}</span>
+                         </div>
+                      )}
+                      <div className="flex items-center gap-1.5 text-[var(--text-primary)] bg-[var(--bg-tertiary)] px-3 py-1.5 rounded-full text-xs font-bold ml-auto">
+                        <ThumbsUp size={14} className="text-[var(--accent)]" />
                         {heroPaper.upvotes}
                       </div>
                     </div>
@@ -209,52 +214,77 @@ export function PapersView() {
 
             {/* List Section */}
             {listPapers.length > 0 && (
-              <div className="grid gap-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="h-px bg-[var(--border)] flex-1"></div>
-                  <span className="font-serif italic text-[var(--text-muted)] text-sm px-2">Más destacados</span>
-                  <div className="h-px bg-[var(--border)] flex-1"></div>
+              <div className="mt-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-8 w-1 bg-[var(--accent)] rounded-full"></div>
+                  <h3 className="font-sans font-bold text-xl md:text-2xl tracking-tight uppercase text-[var(--text-primary)]">
+                    Top Stories
+                  </h3>
+                  <div className="h-px bg-[var(--border)] flex-1 ml-4 opacity-50"></div>
                 </div>
                 
-                {listPapers.map((paper, index) => (
-                  <motion.div
-                    key={paper.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className="paper-card p-4 flex gap-4 cursor-pointer group"
-                    onClick={() => setSelectedPaper(paper)}
-                  >
-                    <div className="flex-shrink-0 flex items-center justify-center w-8 text-center">
-                      <span className="paper-rank">#{index + 2}</span>
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <h3 className="paper-title paper-title-list mb-2 group-hover:text-[var(--accent)] transition-colors truncate">
-                        {paper.titleEs || paper.title}
-                      </h3>
-                      <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
-                        <span className="paper-author">{paper.authors[0]}{paper.authors.length > 1 ? ' et al.' : ''}</span>
-                        <span>•</span>
-                        <span>{format(new Date(paper.publishedAt), "d MMM", { locale: es })}</span>
-                        {paper.arxivId && (
-                          <>
-                            <span>•</span>
-                            <span className="bg-[var(--bg-tertiary)] px-1.5 py-0.5 rounded text-[10px]">arXiv:{paper.arxivId}</span>
-                          </>
+                <div className="flex flex-col gap-0">
+                  {listPapers.map((paper, index) => (
+                    <motion.div
+                      key={paper.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      className="flex gap-4 md:gap-6 py-6 border-b border-[var(--border)] last:border-0 cursor-pointer group"
+                      onClick={() => setSelectedPaper(paper)}
+                    >
+                      {/* Number Indicator */}
+                      <div className="flex-shrink-0 pt-1">
+                        <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[var(--accent)] text-[var(--bg-root)] flex items-center justify-center font-sans font-bold text-xs md:text-sm shadow-sm transform group-hover:scale-110 transition-transform duration-200">
+                          {index + 2}
+                        </div>
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[var(--accent)] font-bold uppercase text-[10px] md:text-xs tracking-widest leading-none">
+                            {paper.authors[0]?.split(',')[0] || 'Unknown Author'}
+                          </span>
+                        </div>
+
+                        <h3 className="font-sans font-bold text-base md:text-xl leading-tight text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors line-clamp-3">
+                          {paper.titleEs || paper.title}
+                        </h3>
+                        
+                        <div className="flex items-center gap-3 text-xs text-[var(--text-muted)] font-sans mt-0.5">
+                          <span>{format(new Date(paper.publishedAt), "MMM d", { locale: es })}</span>
+                          <span className="text-[var(--border)]">•</span>
+                          <div className="flex items-center gap-1">
+                            <ThumbsUp size={12} className={paper.upvotes > 10 ? "text-[var(--accent)]" : ""} />
+                            <span>{paper.upvotes}</span>
+                          </div>
+                          {paper.arxivId && (
+                            <>
+                              <span className="text-[var(--border)] hidden sm:inline">•</span>
+                              <span className="hidden sm:inline font-mono opacity-70">arXiv:{paper.arxivId}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Thumbnail (Right Side) */}
+                      <div className="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 bg-[var(--bg-tertiary)] rounded-lg overflow-hidden border border-[var(--border)] group-hover:border-[var(--accent-dim)] transition-colors relative">
+                        {paper.thumbnail ? (
+                          <img 
+                            src={paper.thumbnail} 
+                            alt="" 
+                            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" 
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)] opacity-20 bg-[var(--bg-secondary)]">
+                            <Newspaper size={24} />
+                          </div>
                         )}
                       </div>
-                    </div>
-                    
-                    <div className="flex flex-col items-end justify-between gap-2">
-                      <div className="flex items-center gap-1 text-[var(--text-muted)] text-xs">
-                        <ThumbsUp size={12} />
-                        {paper.upvotes}
-                      </div>
-                      <ChevronRight size={16} className="text-[var(--text-muted)] group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
