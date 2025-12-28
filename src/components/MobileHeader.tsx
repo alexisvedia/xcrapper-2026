@@ -14,9 +14,25 @@ export function MobileHeader() {
     autoPublishCountdown,
     nextPublishTime,
     setAutoPublishCountdown,
+    currentView,
   } = useAppStore();
 
   const [lastScrapeText, setLastScrapeText] = useState("Nunca");
+
+  const getViewTitle = () => {
+    switch (currentView) {
+      case "inbox":
+        return "Inbox";
+      case "queue":
+        return "Cola";
+      case "published":
+        return "Publicados";
+      case "config":
+        return "Config";
+      default:
+        return "";
+    }
+  };
 
   useEffect(() => {
     const updateLastScrape = () => {
@@ -65,7 +81,10 @@ export function MobileHeader() {
         paddingTop: "env(safe-area-inset-top, 0px)",
       }}
     >
-      <div className="flex items-center justify-end h-14 px-4">
+      <div className="flex items-center justify-between h-14 px-4">
+        <h1 className="text-base font-semibold text-[var(--text-primary)]">
+          {getViewTitle()}
+        </h1>
         {/* System Controls */}
         <div className="flex items-center gap-2">
           {/* Scraping Toggle */}

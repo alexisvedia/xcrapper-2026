@@ -312,11 +312,11 @@ export function InboxView() {
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-[var(--bg-primary)]">
       {/* Header */}
-      <header className="pl-14 md:pl-6 pr-4 md:pr-6 py-4 md:py-5 border-b border-[var(--border)]">
+      <header className="pl-4 md:pl-6 pr-4 md:pr-6 py-4 md:py-5 border-b border-[var(--border)]">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-3">
-              <h1 className="text-base md:text-lg font-medium text-[var(--text-primary)]">Inbox</h1>
+              <h1 className="hidden md:block text-base md:text-lg font-medium text-[var(--text-primary)]">Inbox</h1>
               {/* Auto-approve toggle */}
               <button
                 onClick={() => updateConfig({ autoApproveEnabled: !config.autoApproveEnabled })}

@@ -144,8 +144,8 @@ export function ConfigView() {
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-[var(--bg-primary)]">
       {/* Header */}
-      <header className="pl-14 md:pl-6 pr-4 md:pr-6 py-4 border-b border-[var(--border)] bg-[var(--bg-primary)]">
-        <h1 className="text-base md:text-xl font-semibold flex items-center gap-2">
+      <header className="pl-4 md:pl-6 pr-4 md:pr-6 py-4 border-b border-[var(--border)] bg-[var(--bg-primary)]">
+        <h1 className="hidden md:flex text-base md:text-xl font-semibold items-center gap-2">
           <Settings className="w-4 h-4 md:w-5 md:h-5 text-[var(--accent)] flex-shrink-0" />
           <span>Configuración</span>
         </h1>
