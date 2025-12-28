@@ -115,4 +115,7 @@ export interface Paper {
   publishedAt: Date;
   fetchedAt: Date;
   url: string;
+  // AI-generated article for divulgación
+  article?: string;
+  articleLoading?: boolean;
 }

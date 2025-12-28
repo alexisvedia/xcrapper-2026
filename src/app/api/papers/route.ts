@@ -1,8 +1,52 @@
 import { NextResponse } from 'next/server';
 import { Paper } from '@/types';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
+
+// Simple AI translation for papers
+async function translateToSpanish(texts: { title: string; abstract: string }[]): Promise<{ titleEs: string; abstractEs: string }[]> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.log('[Papers] No GEMINI_API_KEY, skipping translation');
+    return texts.map(t => ({ titleEs: t.title, abstractEs: t.abstract }));
+  }
+
+  try {
+    const gemini = new GoogleGenerativeAI(apiKey);
+    const model = gemini.getGenerativeModel({
+      model: 'gemini-2.0-flash-exp',
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 4096,
+        responseMimeType: 'application/json',
+      },
+    });
+
+    const prompt = `Traduce estos títulos y abstracts de papers científicos al español latinoamericano.
+Mantén la terminología técnica precisa pero hazlo accesible.
+Responde SOLO con un JSON array con objetos {titleEs, abstractEs}.
+
+Papers a traducir:
+${JSON.stringify(texts, null, 2)}`;
+
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
+
+    // Parse the response
+    const parsed = JSON.parse(responseText);
+    if (Array.isArray(parsed) && parsed.length === texts.length) {
+      return parsed;
+    }
+
+    console.log('[Papers] Translation response format unexpected, using originals');
+    return texts.map(t => ({ titleEs: t.title, abstractEs: t.abstract }));
+  } catch (error) {
+    console.error('[Papers] Translation error:', error);
+    return texts.map(t => ({ titleEs: t.title, abstractEs: t.abstract }));
+  }
+}
 
 interface HFPaperResponse {
   paper: {
@@ -46,12 +90,22 @@ async function fetchHuggingFacePapers(date?: string): Promise<Paper[]> {
   const data: HFPaperResponse[] = await response.json();
   console.log('[Papers] Received papers:', data.length);
 
+  // Prepare data for translation
+  const textsToTranslate = data.slice(0, 15).map(item => ({
+    title: item.title || item.paper.title,
+    abstract: item.summary || item.paper.summary || '',
+  }));
+
+  // Translate all at once
+  console.log('[Papers] Translating', textsToTranslate.length, 'papers to Spanish...');
+  const translations = await translateToSpanish(textsToTranslate);
+
   const papers: Paper[] = data.slice(0, 15).map((item, index) => ({
     id: `paper-${item.paper.id}`,
     title: item.title || item.paper.title,
-    titleEs: item.title || item.paper.title, // Keep original, translate later
+    titleEs: translations[index]?.titleEs || item.title || item.paper.title,
     abstract: item.summary || item.paper.summary || '',
-    abstractEs: item.summary || item.paper.summary || '',
+    abstractEs: translations[index]?.abstractEs || item.summary || item.paper.summary || '',
     authors: item.paper.authors?.map(a => a.name) || [],
     institution: item.organization?.fullname,
     arxivId: item.paper.id,
@@ -65,6 +119,7 @@ async function fetchHuggingFacePapers(date?: string): Promise<Paper[]> {
   // Sort by upvotes (should already be sorted but just in case)
   papers.sort((a, b) => b.upvotes - a.upvotes);
 
+  console.log('[Papers] Done! Returning', papers.length, 'translated papers');
   return papers;
 }
 

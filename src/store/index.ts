@@ -247,6 +247,7 @@ interface AppState {
   setPapersLoading: (loading: boolean) => void;
   setPapersDate: (date: string) => void;
   fetchPapers: (date?: string) => Promise<void>;
+  generateArticle: (paperId: string) => Promise<void>;
 }
 
 // LocalStorage helpers for persistence (view only, auto-publish syncs via Supabase)
@@ -687,6 +688,56 @@ export const useAppStore = create<AppState>((set, get) => ({
       console.error('Error fetching papers:', error);
       set({ papers: [], papersLoading: false });
       get().showToast('Error al cargar papers', 'error');
+    }
+  },
+
+  generateArticle: async (paperId) => {
+    const { papers, selectedPaper } = get();
+    const paper = papers.find(p => p.id === paperId);
+
+    if (!paper) return;
+
+    // Mark as loading
+    const updatedPapers = papers.map(p =>
+      p.id === paperId ? { ...p, articleLoading: true } : p
+    );
+    set({ papers: updatedPapers });
+    if (selectedPaper?.id === paperId) {
+      set({ selectedPaper: { ...selectedPaper, articleLoading: true } });
+    }
+
+    try {
+      const response = await fetch('/api/papers/article', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paper }),
+      });
+
+      if (!response.ok) throw new Error('Failed to generate article');
+      const data = await response.json();
+
+      // Update with article
+      const finalPapers = get().papers.map(p =>
+        p.id === paperId ? { ...p, article: data.article, articleLoading: false } : p
+      );
+      set({ papers: finalPapers });
+
+      if (get().selectedPaper?.id === paperId) {
+        set({ selectedPaper: { ...get().selectedPaper!, article: data.article, articleLoading: false } });
+      }
+    } catch (error) {
+      console.error('Error generating article:', error);
+      get().showToast('Error al generar artículo', 'error');
+
+      // Clear loading state
+      const resetPapers = get().papers.map(p =>
+        p.id === paperId ? { ...p, articleLoading: false } : p
+      );
+      set({ papers: resetPapers });
+
+      if (get().selectedPaper?.id === paperId) {
+        set({ selectedPaper: { ...get().selectedPaper!, articleLoading: false } });
+      }
     }
   },
 }));

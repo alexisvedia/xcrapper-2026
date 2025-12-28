@@ -15,21 +15,23 @@ import {
   ThumbsUp,
   X,
   RefreshCw,
-  Building2
+  Building2,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
-import { Paper } from '@/types';
 
 export function PapersView() {
-  const { 
-    papers, 
-    selectedPaper, 
-    papersLoading, 
-    papersDate, 
-    fetchPapers, 
-    setSelectedPaper, 
-    setPapersDate, 
-    theme, 
-    toggleTheme 
+  const {
+    papers,
+    selectedPaper,
+    papersLoading,
+    papersDate,
+    fetchPapers,
+    setSelectedPaper,
+    setPapersDate,
+    theme,
+    toggleTheme,
+    generateArticle
   } = useAppStore();
 
   // Load papers on mount or date change
@@ -49,19 +51,19 @@ export function PapersView() {
   const listPapers = papers.length > 1 ? papers.slice(1) : [];
 
   return (
-    <div className="flex flex-col h-full bg-background text-foreground overflow-hidden">
-      {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-background z-10 sticky top-0">
+    <div className="flex flex-col h-full bg-[var(--bg-root)] text-[var(--text-primary)] overflow-hidden">
+      {/* Header - hidden on mobile since MobileHeader exists */}
+      <header className="hidden md:flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-primary)] z-10">
         <div className="flex items-center gap-3">
-          <div className="hidden md:flex items-center gap-2 text-[var(--accent)]">
+          <div className="flex items-center gap-2 text-[var(--accent)]">
             <Newspaper size={20} />
             <h1 className="font-serif font-bold text-xl tracking-tight">Papers</h1>
           </div>
-          
+
           <div className="flex items-center gap-2 bg-[var(--bg-secondary)] px-3 py-1.5 rounded-full border border-[var(--border)]">
             <Calendar size={14} className="text-[var(--text-muted)]" />
-            <input 
-              type="date" 
+            <input
+              type="date"
               value={papersDate}
               onChange={handleDateChange}
               className="bg-transparent border-none text-xs font-medium focus:outline-none w-[110px] text-[var(--text-primary)]"
@@ -87,6 +89,36 @@ export function PapersView() {
           </button>
         </div>
       </header>
+
+      {/* Mobile Controls Bar */}
+      <div className="md:hidden flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-[var(--bg-primary)]">
+        <div className="flex items-center gap-2 bg-[var(--bg-secondary)] px-3 py-1.5 rounded-full border border-[var(--border)]">
+          <Calendar size={14} className="text-[var(--text-muted)]" />
+          <input
+            type="date"
+            value={papersDate}
+            onChange={handleDateChange}
+            className="bg-transparent border-none text-xs font-medium focus:outline-none w-[110px] text-[var(--text-primary)]"
+          />
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => fetchPapers(papersDate)}
+            disabled={papersLoading}
+            className="p-2 rounded-full hover:bg-[var(--bg-secondary)] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors disabled:opacity-50"
+            aria-label="Actualizar papers"
+          >
+            <RefreshCw size={18} className={papersLoading ? 'animate-spin' : ''} />
+          </button>
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full hover:bg-[var(--bg-secondary)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+        </div>
+      </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-6 lg:p-8 max-w-5xl mx-auto w-full">
@@ -302,15 +334,42 @@ export function PapersView() {
                   )}
                 </div>
 
-                <div className="prose prose-invert max-w-none">
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-[var(--text-muted)] mb-3">Abstract</h4>
-                  <p className="text-[var(--text-secondary)] leading-7 text-base md:text-lg">
-                    {selectedPaper.abstractEs || selectedPaper.abstract}
-                  </p>
-                </div>
+                {/* Article Section - Show generated article or abstract */}
+                {selectedPaper.article ? (
+                  <div className="prose prose-invert max-w-none">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sparkles size={14} className="text-[var(--accent)]" />
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-[var(--accent)]">Artículo de Divulgación</h4>
+                    </div>
+                    <div className="text-[var(--text-secondary)] leading-7 text-base md:text-lg space-y-4">
+                      {selectedPaper.article.split('\n\n').map((paragraph, i) => (
+                        <p key={i}>{paragraph}</p>
+                      ))}
+                    </div>
+                  </div>
+                ) : selectedPaper.articleLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 gap-4">
+                    <Loader2 size={32} className="text-[var(--accent)] animate-spin" />
+                    <p className="text-[var(--text-muted)] text-sm">Generando artículo de divulgación...</p>
+                  </div>
+                ) : (
+                  <div className="prose prose-invert max-w-none">
+                    <h4 className="text-sm font-bold uppercase tracking-wider text-[var(--text-muted)] mb-3">Abstract</h4>
+                    <p className="text-[var(--text-secondary)] leading-7 text-base md:text-lg">
+                      {selectedPaper.abstractEs || selectedPaper.abstract}
+                    </p>
+                    <button
+                      onClick={() => generateArticle(selectedPaper.id)}
+                      className="mt-4 btn bg-[var(--accent-dim)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg-root)] transition-colors"
+                    >
+                      <Sparkles size={14} />
+                      Generar artículo fácil de entender
+                    </button>
+                  </div>
+                )}
 
                 <div className="mt-8 pt-6 border-t border-[var(--border)]">
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-[var(--text-muted)] mb-3">Authors</h4>
+                  <h4 className="text-sm font-bold uppercase tracking-wider text-[var(--text-muted)] mb-3">Autores</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedPaper.authors.map((author, i) => (
                       <span key={i} className="bg-[var(--bg-tertiary)] text-[var(--text-secondary)] px-3 py-1 rounded-full text-sm">
@@ -323,19 +382,19 @@ export function PapersView() {
 
               {/* Modal Footer */}
               <div className="p-4 border-t border-[var(--border)] bg-[var(--bg-secondary)] flex justify-end gap-3">
-                <button 
+                <button
                   className="btn btn-ghost"
                   onClick={() => setSelectedPaper(null)}
                 >
                   Cerrar
                 </button>
-                <a 
-                  href={selectedPaper.url} 
-                  target="_blank" 
+                <a
+                  href={selectedPaper.url}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-primary"
                 >
-                  Leer paper completo
+                  Ver paper original
                   <ExternalLink size={14} />
                 </a>
               </div>
