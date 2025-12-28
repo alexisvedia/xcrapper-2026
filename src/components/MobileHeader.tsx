@@ -65,59 +65,7 @@ export function MobileHeader() {
         paddingTop: "env(safe-area-inset-top, 0px)",
       }}
     >
-      <div className="flex items-center justify-between h-14 px-4">
-        {/* Logo */}
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[var(--bg-tertiary)] flex items-center justify-center p-1.5">
-            <svg
-              viewBox="0 0 512 512"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-full h-full drop-shadow-[0_0_6px_rgba(0,242,254,0.3)]"
-            >
-              <defs>
-                <linearGradient
-                  id="mobile-header-grad"
-                  x1="0%"
-                  y1="0%"
-                  x2="100%"
-                  y2="100%"
-                >
-                  <stop
-                    offset="0%"
-                    style={{ stopColor: "#00f2fe", stopOpacity: 1 }}
-                  />
-                  <stop
-                    offset="100%"
-                    style={{ stopColor: "#4facfe", stopOpacity: 1 }}
-                  />
-                </linearGradient>
-              </defs>
-              <path
-                d="M120 120L256 256M392 120L256 256M256 256L120 392M256 256L392 392"
-                stroke="url(#mobile-header-grad)"
-                strokeWidth="60"
-                strokeLinecap="round"
-              />
-              <path
-                d="M350 150C380 180 400 220 400 256C400 292 380 332 350 362"
-                stroke="url(#mobile-header-grad)"
-                strokeWidth="20"
-                strokeLinecap="round"
-                opacity="0.6"
-              />
-              <path
-                d="M162 150C132 180 112 220 112 256C112 292 132 332 162 362"
-                stroke="url(#mobile-header-grad)"
-                strokeWidth="20"
-                strokeLinecap="round"
-                opacity="0.6"
-              />
-            </svg>
-          </div>
-          <span className="text-sm font-semibold tracking-tight">XCrapper</span>
-        </div>
-
+      <div className="flex items-center justify-end h-14 px-4">
         {/* System Controls */}
         <div className="flex items-center gap-2">
           {/* Scraping Toggle */}

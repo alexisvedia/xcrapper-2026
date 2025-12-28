@@ -731,7 +731,7 @@ export function QueueView() {
 
       {/* FAB - Floating Action Button for Auto-publish (mobile only) */}
       {queue.length > 0 && (
-        <div className="md:hidden fixed bottom-6 right-4 z-40">
+        <div className="md:hidden fixed bottom-20 right-4 z-40">
           {isAutoPublishing ? (
             <button
               onClick={stopAutoPublish}
