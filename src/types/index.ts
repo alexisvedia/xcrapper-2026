@@ -115,6 +115,8 @@ export interface Paper {
   publishedAt: Date;
   fetchedAt: Date;
   url: string;
+  // Hook for home view (simple description)
+  hook?: string;
   // AI-generated article for divulgación
   article?: string;
   articleLoading?: boolean;

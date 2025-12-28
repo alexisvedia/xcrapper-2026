@@ -170,8 +170,8 @@ export function PapersView() {
                         <Newspaper size={48} className="text-[var(--text-muted)] opacity-20" />
                       </div>
                     )}
-                    <div className="absolute top-4 left-4">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[var(--accent)] text-[var(--bg-root)] font-bold font-sans text-lg shadow-lg">
+                    <div className="absolute top-3 left-3 md:top-4 md:left-4">
+                      <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-[var(--accent)] text-[var(--bg-root)] font-bold font-sans text-base md:text-lg shadow-lg">
                         1
                       </div>
                     </div>
@@ -188,7 +188,7 @@ export function PapersView() {
                     </div>
                     
                     <h2 className="font-sans font-extrabold text-2xl md:text-4xl leading-[1.1] mb-4 text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
-                      {heroPaper.titleEs || heroPaper.title}
+                      {heroPaper.hook || heroPaper.titleEs || heroPaper.title}
                     </h2>
                     
                     <p className="text-[var(--text-secondary)] leading-relaxed mb-6 line-clamp-3 font-sans text-sm md:text-base opacity-90">
@@ -249,7 +249,7 @@ export function PapersView() {
                         </div>
 
                         <h3 className="font-sans font-bold text-base md:text-xl leading-tight text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors line-clamp-3">
-                          {paper.titleEs || paper.title}
+                          {paper.hook || paper.titleEs || paper.title}
                         </h3>
                         
                         <div className="flex items-center gap-3 text-xs text-[var(--text-muted)] font-sans mt-0.5">

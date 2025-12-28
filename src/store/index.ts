@@ -690,6 +690,17 @@ export const useAppStore = create<AppState>((set, get) => ({
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch papers');
       const data = await response.json();
+      
+      // Update date if API returned a different one (auto-fallback)
+      if (data.date && data.date !== targetDate) {
+        set({ papersDate: data.date });
+        if (targetDate === today) {
+           get().showToast(`Mostrando papers recientes (${data.date})`, 'info');
+        } else {
+           get().showToast(`Sin papers el ${targetDate}, mostrando ${data.date}`, 'info');
+        }
+      }
+
       set({ papers: data.papers || [], papersLoading: false });
     } catch (error) {
       console.error('Error fetching papers:', error);

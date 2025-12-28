@@ -6,30 +6,44 @@ export const runtime = 'nodejs';
 export const maxDuration = 60;
 
 // Translate papers to Spanish using Groq with error handling
-async function translateToSpanish(texts: { title: string; abstract: string }[]): Promise<{ titleEs: string; abstractEs: string }[]> {
+async function translateToSpanish(texts: { title: string; abstract: string }[]): Promise<{ titleEs: string; abstractEs: string; hook: string }[]> {
   const apiKey = process.env.GROQ_API_KEY;
 
-  // If no API key, return originals
+  // If no API key, return originals with simple hooks
   if (!apiKey) {
     console.log('[Papers] No GROQ_API_KEY, skipping translation');
-    return texts.map(t => ({ titleEs: t.title, abstractEs: t.abstract }));
+    return texts.map(t => ({ 
+      titleEs: t.title, 
+      abstractEs: t.abstract,
+      hook: t.title // Fallback hook is just the title
+    }));
   }
 
   try {
     const groq = new Groq({ apiKey });
 
     // Batch translate all papers in one request
-    const prompt = `Traduce los siguientes títulos y abstracts de papers científicos al español latinoamericano.
-Mantén la terminología técnica en inglés cuando sea apropiado (ej: "reinforcement learning", "transformer").
+    const prompt = `Analiza los siguientes títulos y abstracts de papers científicos.
+Tu tarea es generar 3 campos para cada paper en español latinoamericano:
+
+1. "titleEs": Título técnico traducido fielmente.
+2. "abstractEs": Abstract traducido manteniendo el rigor técnico.
+3. "hook": UN SOLO PÁRRAFO CORTO (1-2 oraciones) que explique qué hace el paper en lenguaje sencillo y atractivo, evitando jerga técnica compleja. Estilo "Noticia de tecnología". 
+   - Malo: "Proponemos una arquitectura transformer con atención dispersa..."
+   - Bueno: "Esta nueva IA reduce el costo de procesar videos largos ignorando la información repetitiva, haciéndolo 10 veces más rápido."
+
 Responde SOLO con un JSON array, sin markdown ni explicaciones.
 
-Textos a traducir:
+Textos a procesar:
 ${JSON.stringify(texts, null, 2)}
 
 Responde con este formato exacto (JSON array):
 [
-  {"titleEs": "título traducido 1", "abstractEs": "abstract traducido 1"},
-  {"titleEs": "título traducido 2", "abstractEs": "abstract traducido 2"}
+  {
+    "titleEs": "título traducido...",
+    "abstractEs": "abstract traducido...",
+    "hook": "gancho sencillo..."
+  }
 ]`;
 
     const result = await groq.chat.completions.create({
@@ -54,7 +68,11 @@ Responde con este formato exacto (JSON array):
   } catch (error) {
     console.error('[Papers] Translation error:', error);
     // Gracefully fall back to original text
-    return texts.map(t => ({ titleEs: t.title, abstractEs: t.abstract }));
+    return texts.map(t => ({ 
+      titleEs: t.title, 
+      abstractEs: t.abstract,
+      hook: t.title
+    }));
   }
 }
 
@@ -117,6 +135,7 @@ async function fetchHuggingFacePapers(date?: string): Promise<Paper[]> {
     id: `paper-${item.paper.id}`,
     title: item.title || item.paper.title,
     titleEs: translations[index]?.titleEs || item.title || item.paper.title,
+    hook: translations[index]?.hook || item.title || item.paper.title,
     abstract: item.summary || item.paper.summary || '',
     abstractEs: translations[index]?.abstractEs || item.summary || item.paper.summary || '',
     authors: item.paper.authors?.map(a => a.name) || [],
@@ -136,17 +155,50 @@ async function fetchHuggingFacePapers(date?: string): Promise<Paper[]> {
   return papers;
 }
 
+// Helper to subtract days from a YYYY-MM-DD string
+function subtractDays(dateStr: string, days: number): string {
+  const date = new Date(dateStr);
+  date.setDate(date.getDate() - days);
+  return date.toISOString().split('T')[0];
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const dateParam = searchParams.get('date');
 
   try {
-    const papers = await fetchHuggingFacePapers(dateParam || undefined);
-    const dateStr = dateParam || new Date().toISOString().split('T')[0];
+    let papers = await fetchHuggingFacePapers(dateParam || undefined);
+    let finalDate = dateParam || new Date().toISOString().split('T')[0];
+    const requestedDate = finalDate;
+
+    // Auto-fallback: If date was requested but returns 0 papers, try previous days
+    if (papers.length === 0 && dateParam) {
+      console.log(`[Papers] No papers found for ${requestedDate}, trying previous dates...`);
+      let attempts = 0;
+      let currentDate = finalDate;
+
+      while (papers.length === 0 && attempts < 5) {
+        attempts++;
+        currentDate = subtractDays(currentDate, 1);
+        console.log(`[Papers] Fallback attempt ${attempts}: fetching for ${currentDate}`);
+        
+        try {
+          papers = await fetchHuggingFacePapers(currentDate);
+          if (papers.length > 0) {
+            finalDate = currentDate;
+            console.log(`[Papers] Found ${papers.length} papers on ${finalDate}`);
+            break;
+          }
+        } catch (err) {
+          console.warn(`[Papers] Failed to fetch for fallback date ${currentDate}`, err);
+        }
+      }
+    }
 
     return NextResponse.json({
       papers,
-      date: dateStr,
+      date: finalDate,
+      requestedDate,
       count: papers.length,
       source: 'huggingface'
     });
