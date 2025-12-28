@@ -248,6 +248,7 @@ interface AppState {
   setPapersDate: (date: string) => void;
   fetchPapers: (date?: string) => Promise<void>;
   generateArticle: (paperId: string) => Promise<void>;
+  publishPaperThread: (paperId: string) => Promise<void>;
 }
 
 // LocalStorage helpers for persistence (view only, auto-publish syncs via Supabase)
@@ -756,6 +757,45 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (get().selectedPaper?.id === paperId) {
         set({ selectedPaper: { ...get().selectedPaper!, articleLoading: false } });
       }
+    }
+  },
+
+  publishPaperThread: async (paperId) => {
+    const { papers, selectedPaper } = get();
+    const paper = papers.find(p => p.id === paperId);
+
+    if (!paper || !paper.article) {
+      get().showToast('Primero genera el artículo', 'error');
+      return;
+    }
+
+    get().showToast('Publicando hilo en Twitter...', 'info');
+
+    try {
+      const response = await fetch('/api/papers/thread', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paper }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al publicar');
+      }
+
+      get().showToast(`Hilo publicado: ${data.tweetCount} tweets`, 'success');
+
+      // Close the modal after publishing
+      if (selectedPaper?.id === paperId) {
+        set({ selectedPaper: null });
+      }
+    } catch (error) {
+      console.error('Error publishing thread:', error);
+      get().showToast(
+        error instanceof Error ? error.message : 'Error al publicar hilo',
+        'error'
+      );
     }
   },
 }));

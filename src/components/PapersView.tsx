@@ -16,7 +16,8 @@ import {
   RefreshCw,
   Building2,
   Sparkles,
-  Loader2
+  Loader2,
+  Twitter
 } from 'lucide-react';
 
 export function PapersView() {
@@ -30,7 +31,8 @@ export function PapersView() {
     setPapersDate,
     theme,
     toggleTheme,
-    generateArticle
+    generateArticle,
+    publishPaperThread
   } = useAppStore();
 
   // Load papers on mount or date change
@@ -418,6 +420,15 @@ export function PapersView() {
                 >
                   Cerrar
                 </button>
+                {selectedPaper.article && (
+                  <button
+                    onClick={() => publishPaperThread(selectedPaper.id)}
+                    className="btn bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white"
+                  >
+                    <Twitter size={14} />
+                    Publicar hilo
+                  </button>
+                )}
                 <a
                   href={selectedPaper.url}
                   target="_blank"
