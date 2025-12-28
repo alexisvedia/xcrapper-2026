@@ -640,7 +640,7 @@ export function InboxView() {
       </div>
 
       {/* FAB - Floating Action Button for Scrapear (Fitts's Law: thumb zone) */}
-      <div className="md:hidden fixed bottom-20 right-4 z-40">
+      <div className="md:hidden fixed bottom-24 right-4 z-40">
         {isScrapingLoading ? (
           <button
             onClick={handleCancelScrape}

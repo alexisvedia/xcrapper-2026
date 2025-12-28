@@ -136,11 +136,11 @@ export function PapersView() {
               <h3 className="font-medium text-lg mb-1">Sin papers para esta fecha</h3>
               <p className="text-[var(--text-muted)] text-sm">Intenta seleccionar otro día o vuelve más tarde.</p>
             </div>
-            <button 
+            <button
               onClick={() => {
                 const today = new Date().toISOString().split('T')[0];
                 setPapersDate(today);
-                fetchPapers(today);
+                fetchPapers(); // No date param = fetch featured papers
               }}
               className="btn btn-secondary mt-2"
             >

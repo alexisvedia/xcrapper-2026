@@ -1,49 +1,59 @@
 import { NextResponse } from 'next/server';
+import Groq from 'groq-sdk';
 import { Paper } from '@/types';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
-// Simple AI translation for papers
+// Translate papers to Spanish using Groq with error handling
 async function translateToSpanish(texts: { title: string; abstract: string }[]): Promise<{ titleEs: string; abstractEs: string }[]> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
+
+  // If no API key, return originals
   if (!apiKey) {
-    console.log('[Papers] No GEMINI_API_KEY, skipping translation');
+    console.log('[Papers] No GROQ_API_KEY, skipping translation');
     return texts.map(t => ({ titleEs: t.title, abstractEs: t.abstract }));
   }
 
   try {
-    const gemini = new GoogleGenerativeAI(apiKey);
-    const model = gemini.getGenerativeModel({
-      model: 'gemini-2.0-flash-exp',
-      generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 4096,
-        responseMimeType: 'application/json',
-      },
+    const groq = new Groq({ apiKey });
+
+    // Batch translate all papers in one request
+    const prompt = `Traduce los siguientes títulos y abstracts de papers científicos al español latinoamericano.
+Mantén la terminología técnica en inglés cuando sea apropiado (ej: "reinforcement learning", "transformer").
+Responde SOLO con un JSON array, sin markdown ni explicaciones.
+
+Textos a traducir:
+${JSON.stringify(texts, null, 2)}
+
+Responde con este formato exacto (JSON array):
+[
+  {"titleEs": "título traducido 1", "abstractEs": "abstract traducido 1"},
+  {"titleEs": "título traducido 2", "abstractEs": "abstract traducido 2"}
+]`;
+
+    const result = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.3,
+      max_tokens: 8000,
     });
 
-    const prompt = `Traduce estos títulos y abstracts de papers científicos al español latinoamericano.
-Mantén la terminología técnica precisa pero hazlo accesible.
-Responde SOLO con un JSON array con objetos {titleEs, abstractEs}.
+    const responseText = result.choices[0]?.message?.content || '';
 
-Papers a traducir:
-${JSON.stringify(texts, null, 2)}`;
-
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-
-    // Parse the response
-    const parsed = JSON.parse(responseText);
-    if (Array.isArray(parsed) && parsed.length === texts.length) {
-      return parsed;
+    // Extract JSON from response (handle markdown code blocks)
+    let jsonStr = responseText;
+    if (responseText.includes('```')) {
+      const match = responseText.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (match) jsonStr = match[1];
     }
 
-    console.log('[Papers] Translation response format unexpected, using originals');
-    return texts.map(t => ({ titleEs: t.title, abstractEs: t.abstract }));
+    const translations = JSON.parse(jsonStr.trim());
+    console.log('[Papers] Translation successful');
+    return translations;
   } catch (error) {
     console.error('[Papers] Translation error:', error);
+    // Gracefully fall back to original text
     return texts.map(t => ({ titleEs: t.title, abstractEs: t.abstract }));
   }
 }
@@ -55,11 +65,14 @@ interface HFPaperResponse {
     summary: string;
     authors: { name: string }[];
     publishedAt: string;
+    upvotes: number;
+    organization?: {
+      fullname: string;
+    };
   };
   title: string;
   summary: string;
   thumbnail?: string;
-  upvotes: number;
   numComments: number;
   organization?: {
     fullname: string;
@@ -107,9 +120,9 @@ async function fetchHuggingFacePapers(date?: string): Promise<Paper[]> {
     abstract: item.summary || item.paper.summary || '',
     abstractEs: translations[index]?.abstractEs || item.summary || item.paper.summary || '',
     authors: item.paper.authors?.map(a => a.name) || [],
-    institution: item.organization?.fullname,
+    institution: item.organization?.fullname || item.paper.organization?.fullname,
     arxivId: item.paper.id,
-    upvotes: item.upvotes || 0,
+    upvotes: item.paper.upvotes || 0, // upvotes are inside paper object
     thumbnail: item.thumbnail,
     publishedAt: new Date(item.paper.publishedAt),
     fetchedAt: new Date(),

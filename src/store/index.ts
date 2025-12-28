@@ -676,11 +676,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   setPapersLoading: (loading) => set({ papersLoading: loading }),
   setPapersDate: (date) => set({ papersDate: date }),
   fetchPapers: async (date) => {
+    // If date is explicitly passed, use it. Otherwise use stored date.
+    // If date is 'today' or matches today's date, don't send date param (HF returns featured papers)
+    const today = new Date().toISOString().split('T')[0];
     const targetDate = date || get().papersDate;
+    const isToday = targetDate === today;
+
     set({ papersLoading: true, papersDate: targetDate });
 
     try {
-      const response = await fetch(`/api/papers?date=${targetDate}`);
+      // Don't send date param for today - HF API returns featured papers without date
+      const url = isToday ? '/api/papers' : `/api/papers?date=${targetDate}`;
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch papers');
       const data = await response.json();
       set({ papers: data.papers || [], papersLoading: false });
