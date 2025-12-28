@@ -1,17 +1,83 @@
 import { NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
+import OpenAI from 'openai';
 import { Paper } from '@/types';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
-// Translate papers to Spanish using Groq with error handling
-async function translateToSpanish(texts: { title: string; abstract: string }[]): Promise<{ titleEs: string; abstractEs: string; hook: string }[]> {
-  const apiKey = process.env.GROQ_API_KEY;
+const GROQ_MODELS = [
+  'llama-3.3-70b-versatile',
+  'llama-3.1-8b-instant', 
+  'gemma2-9b-it'
+];
 
-  // If no API key, return originals with simple hooks
-  if (!apiKey) {
-    console.log('[Papers] No GROQ_API_KEY, skipping translation');
+async function callWithFallback(prompt: string, maxTokens: number = 8000, temperature: number = 0.3): Promise<string> {
+  const groqApiKey = process.env.GROQ_API_KEY;
+  const openRouterApiKey = process.env.OPENROUTER_API_KEY;
+  let lastError;
+
+  // Try Groq models first
+  if (groqApiKey) {
+    const groq = new Groq({ apiKey: groqApiKey });
+    
+    for (const model of GROQ_MODELS) {
+      try {
+        console.log(`[AI] Trying Groq model: ${model}`);
+        const result = await groq.chat.completions.create({
+          model: model,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: temperature,
+          max_tokens: maxTokens,
+        });
+        
+        const content = result.choices[0]?.message?.content;
+        if (content) return content;
+      } catch (e) {
+        console.warn(`[AI] Groq model ${model} failed:`, e instanceof Error ? e.message : String(e));
+        lastError = e;
+      }
+    }
+  } else {
+    console.log('[AI] No GROQ_API_KEY, skipping Groq models');
+  }
+
+  // Fallback to OpenRouter
+  if (openRouterApiKey) {
+    try {
+      console.log('[AI] All Groq models failed or key missing. Trying OpenRouter (google/gemini-2.0-flash-001)...');
+      const openai = new OpenAI({
+        apiKey: openRouterApiKey,
+        baseURL: 'https://openrouter.ai/api/v1'
+      });
+
+      const result = await openai.chat.completions.create({
+        model: 'google/gemini-2.0-flash-001',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: temperature,
+        max_tokens: maxTokens,
+      });
+
+      const content = result.choices[0]?.message?.content;
+      if (content) return content;
+    } catch (e) {
+      console.error('[AI] OpenRouter fallback failed:', e instanceof Error ? e.message : String(e));
+      lastError = e;
+    }
+  } else {
+    console.log('[AI] No OPENROUTER_API_KEY, skipping OpenRouter fallback');
+  }
+
+  throw lastError || new Error('No AI models available or all failed');
+}
+
+// Translate papers to Spanish using Groq/OpenRouter with fallback
+async function translateToSpanish(texts: { title: string; abstract: string }[]): Promise<{ titleEs: string; abstractEs: string; hook: string }[]> {
+  const hasKeys = process.env.GROQ_API_KEY || process.env.OPENROUTER_API_KEY;
+
+  // If no API keys, return originals with simple hooks
+  if (!hasKeys) {
+    console.log('[Papers] No AI keys (GROQ or OPENROUTER), skipping translation');
     return texts.map(t => ({ 
       titleEs: t.title, 
       abstractEs: t.abstract,
@@ -20,8 +86,6 @@ async function translateToSpanish(texts: { title: string; abstract: string }[]):
   }
 
   try {
-    const groq = new Groq({ apiKey });
-
     // Batch translate all papers in one request
     const prompt = `Analiza los siguientes títulos y abstracts de papers científicos.
 Tu tarea es generar 3 campos para cada paper en español latinoamericano:
@@ -46,14 +110,7 @@ Responde con este formato exacto (JSON array):
   }
 ]`;
 
-    const result = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
-      max_tokens: 8000,
-    });
-
-    const responseText = result.choices[0]?.message?.content || '';
+    const responseText = await callWithFallback(prompt, 8000, 0.3);
 
     // Extract JSON from response (handle markdown code blocks)
     let jsonStr = responseText;

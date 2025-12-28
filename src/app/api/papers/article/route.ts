@@ -1,8 +1,74 @@
 import { NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
+import OpenAI from 'openai';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
+
+const GROQ_MODELS = [
+  'llama-3.3-70b-versatile',
+  'llama-3.1-8b-instant', 
+  'gemma2-9b-it'
+];
+
+async function callWithFallback(prompt: string, maxTokens: number = 2048, temperature: number = 0.7): Promise<string> {
+  const groqApiKey = process.env.GROQ_API_KEY;
+  const openRouterApiKey = process.env.OPENROUTER_API_KEY;
+  let lastError;
+
+  // Try Groq models first
+  if (groqApiKey) {
+    const groq = new Groq({ apiKey: groqApiKey });
+    
+    for (const model of GROQ_MODELS) {
+      try {
+        console.log(`[AI] Trying Groq model: ${model}`);
+        const result = await groq.chat.completions.create({
+          model: model,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: temperature,
+          max_tokens: maxTokens,
+        });
+        
+        const content = result.choices[0]?.message?.content;
+        if (content) return content;
+      } catch (e) {
+        console.warn(`[AI] Groq model ${model} failed:`, e instanceof Error ? e.message : String(e));
+        lastError = e;
+      }
+    }
+  } else {
+    console.log('[AI] No GROQ_API_KEY, skipping Groq models');
+  }
+
+  // Fallback to OpenRouter
+  if (openRouterApiKey) {
+    try {
+      console.log('[AI] All Groq models failed or key missing. Trying OpenRouter (google/gemini-2.0-flash-001)...');
+      const openai = new OpenAI({
+        apiKey: openRouterApiKey,
+        baseURL: 'https://openrouter.ai/api/v1'
+      });
+
+      const result = await openai.chat.completions.create({
+        model: 'google/gemini-2.0-flash-001',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: temperature,
+        max_tokens: maxTokens,
+      });
+
+      const content = result.choices[0]?.message?.content;
+      if (content) return content;
+    } catch (e) {
+      console.error('[AI] OpenRouter fallback failed:', e instanceof Error ? e.message : String(e));
+      lastError = e;
+    }
+  } else {
+    console.log('[AI] No OPENROUTER_API_KEY, skipping OpenRouter fallback');
+  }
+
+  throw lastError || new Error('No AI models available or all failed');
+}
 
 // Generate a divulgación article from paper content
 async function generateArticle(paper: {
@@ -13,12 +79,10 @@ async function generateArticle(paper: {
   authors: string[];
   arxivId?: string;
 }): Promise<string> {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
-    throw new Error('GROQ_API_KEY not configured');
+  const hasKeys = process.env.GROQ_API_KEY || process.env.OPENROUTER_API_KEY;
+  if (!hasKeys) {
+    throw new Error('GROQ_API_KEY and OPENROUTER_API_KEY not configured');
   }
-
-  const groq = new Groq({ apiKey });
 
   const prompt = `Eres un periodista científico experto en IA y tecnología. Tu trabajo es escribir artículos de divulgación científica que hagan accesible la investigación de vanguardia al público general hispanohablante.
 
@@ -51,14 +115,7 @@ FORMATO:
 
 Escribe el artículo ahora:`;
 
-  const result = await groq.chat.completions.create({
-    model: 'llama-3.3-70b-versatile',
-    messages: [{ role: 'user', content: prompt }],
-    temperature: 0.7,
-    max_tokens: 2048,
-  });
-
-  const article = result.choices[0]?.message?.content || '';
+  const article = await callWithFallback(prompt, 2048, 0.7);
 
   return article;
 }
