@@ -54,11 +54,15 @@ export type AIModel =
   | 'meta-llama/llama-3.2-3b-instruct:free'
   | 'qwen/qwen-2-7b-instruct:free'
   | 'microsoft/phi-3-mini-128k-instruct:free'
-  | 'mistralai/mistral-7b-instruct:free';
+  | 'mistralai/mistral-7b-instruct:free'
+  // Nvidia
+  | 'minimaxai/minimax-m2.1';
 
-export type AIProvider = 'groq' | 'gemini' | 'openrouter';
+export type AIProvider = 'groq' | 'gemini' | 'openrouter' | 'nvidia';
 
 export const AI_MODELS: { id: AIModel; name: string; description: string; provider: AIProvider }[] = [
+  // Nvidia models
+  { id: 'minimaxai/minimax-m2.1', name: 'Minimax 2.1', description: 'Nvidia Minimax 2.1 - Alto rendimiento', provider: 'nvidia' },
   // Groq models
   { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B', description: 'Mejor calidad, más lento', provider: 'groq' },
   { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B', description: 'Rápido, buena calidad', provider: 'groq' },

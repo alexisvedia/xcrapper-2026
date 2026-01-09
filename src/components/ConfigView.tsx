@@ -280,10 +280,17 @@ export function ConfigView() {
                 Seleccionar modelo
               </label>
               <select
-                value={config.aiModel || 'llama-3.3-70b-versatile'}
+                value={config.aiModel || 'minimaxai/minimax-m2.1'}
                 onChange={(e) => updateConfig({ aiModel: e.target.value as AIModel })}
                 className="input"
               >
+                <optgroup label="Nvidia">
+                  {AI_MODELS.filter(m => m.provider === 'nvidia').map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.name} - {model.description}
+                    </option>
+                  ))}
+                </optgroup>
                 <optgroup label="Groq (Gratuito)">
                   {AI_MODELS.filter(m => m.provider === 'groq').map((model) => (
                     <option key={model.id} value={model.id}>

@@ -295,7 +295,7 @@ export async function POST(request: Request) {
             minRelevanceScore: config.minRelevanceScore,
             rejectedPatterns: config.rejectedPatterns,
             aiSystemPrompt: config.aiSystemPrompt,
-            aiModel: config.aiModel || 'llama-3.3-70b-versatile',
+            aiModel: config.aiModel || 'minimaxai/minimax-m2.1',
           });
 
           // Ensure URLs are preserved in processed content (from both main and quoted tweet)

@@ -138,7 +138,7 @@ RULES FOR PARAPHRASE/QUOTE:
   "SUMMARY": "<one line summary or null>"
 }`,
   rejectedPatterns: [],
-  aiModel: 'llama-3.3-70b-versatile',
+  aiModel: 'minimaxai/minimax-m2.1',
   scrapingEnabled: false,
 };
 

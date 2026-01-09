@@ -3,10 +3,10 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 import { AIModel, AI_MODELS, AIProvider } from '@/types';
 
-// Lazy initialization to avoid errors when environment variables are not available at module load
 let _groq: Groq | null = null;
 let _gemini: GoogleGenerativeAI | null = null;
 let _openrouter: OpenAI | null = null;
+let _nvidia: OpenAI | null = null;
 
 function getGroq(): Groq {
   if (!_groq) {
@@ -34,15 +34,25 @@ function getOpenRouter(): OpenAI {
   return _openrouter;
 }
 
-// Rate limit tracking per provider
+function getNvidia(): OpenAI {
+  if (!_nvidia) {
+    _nvidia = new OpenAI({
+      baseURL: 'https://integrate.api.nvidia.com/v1',
+      apiKey: process.env.NVIDIA_API_KEY,
+    });
+  }
+  return _nvidia;
+}
+
 const rateLimitState: Record<string, { blockedUntil: Date | null; retryAfterSeconds: number }> = {
   groq: { blockedUntil: null, retryAfterSeconds: 0 },
   gemini: { blockedUntil: null, retryAfterSeconds: 0 },
   openrouter: { blockedUntil: null, retryAfterSeconds: 0 },
+  nvidia: { blockedUntil: null, retryAfterSeconds: 0 },
 };
 
-// Fallback order when rate limited
 const FALLBACK_MODELS: AIModel[] = [
+  'minimaxai/minimax-m2.1',
   'gemini-2.0-flash-exp',
   'gemini-1.5-flash',
   'google/gemma-2-9b-it:free',
@@ -123,7 +133,6 @@ export interface AIAnalysisResult {
   model: string;
 }
 
-// Helper function to call AI with a specific model
 async function callAIModel(
   model: AIModel,
   systemPrompt: string,
@@ -146,6 +155,18 @@ async function callAIModel(
     ]);
 
     return result.response.text() || '{}';
+  } else if (provider === 'nvidia') {
+    const completion = await getNvidia().chat.completions.create({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      model,
+      temperature: 0.2,
+      max_tokens: 1024,
+    });
+
+    return completion.choices[0]?.message?.content || '{}';
   } else if (provider === 'openrouter') {
     const completion = await getOpenRouter().chat.completions.create({
       messages: [
@@ -159,7 +180,6 @@ async function callAIModel(
 
     return completion.choices[0]?.message?.content || '{}';
   } else {
-    // Groq API
     const completion = await getGroq().chat.completions.create({
       messages: [
         { role: 'system', content: systemPrompt },
@@ -185,7 +205,7 @@ export async function analyzeTweet(
     aiModel: AIModel;
   }
 ): Promise<AIAnalysisResult> {
-  const primaryModel = config.aiModel || 'llama-3.3-70b-versatile';
+  const primaryModel = config.aiModel || 'minimaxai/minimax-m2.1';
 
   // Check for rejected patterns first (if any configured)
   if (config.rejectedPatterns && config.rejectedPatterns.length > 0) {
